@@ -1,0 +1,1653 @@
+{% extends "base.html" %}
+
+{% block title %}Live Monitor | CyberShield AI{% endblock %}
+
+{% block content %}
+
+<style>
+/* ==========================================
+   CYBERSHIELD AI - LIVE MONITOR
+   PHASE 3: LIVE CAPTURE + FLOW + ML
+========================================== */
+
+.monitor-page {
+    color: #eaf1ff;
+}
+
+.monitor-page * {
+    box-sizing: border-box;
+}
+
+.monitor-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+
+.monitor-eyebrow {
+    margin: 0 0 8px;
+    color: #60a5fa;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.7px;
+}
+
+.monitor-heading h1 {
+    margin: 0 0 8px;
+    color: #f8fafc;
+    font-size: 30px;
+    font-weight: 850;
+}
+
+.monitor-heading p {
+    max-width: 720px;
+    margin: 0;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.monitor-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 1px solid #334766;
+    border-radius: 999px;
+    background: #111d33;
+    color: #a9bad2;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.monitor-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #64748b;
+}
+
+.monitor-status-pill.running {
+    border-color: rgba(74, 222, 128, .35);
+    color: #86efac;
+}
+
+.monitor-status-pill.running .monitor-status-dot {
+    background: #4ade80;
+    box-shadow: 0 0 0 5px rgba(74, 222, 128, .10);
+}
+
+.monitor-status-pill.stopped .monitor-status-dot {
+    background: #64748b;
+}
+
+/* CONTROL PANEL */
+
+.monitor-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    padding: 20px;
+    margin-bottom: 18px;
+    background: #111d33;
+    border: 1px solid #253653;
+    border-radius: 14px;
+}
+
+.monitor-control-copy h2 {
+    margin: 0 0 6px;
+    color: #f1f5f9;
+    font-size: 16px;
+}
+
+.monitor-control-copy p {
+    margin: 0;
+    color: #8194b1;
+    font-size: 11px;
+}
+
+.monitor-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.monitor-btn {
+    min-width: 125px;
+    padding: 11px 18px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.monitor-btn.start {
+    background: #2563eb;
+    color: white;
+}
+
+.monitor-btn.start:hover {
+    background: #3b82f6;
+}
+
+.monitor-btn.stop {
+    background: rgba(239, 68, 68, .08);
+    border-color: rgba(248, 113, 113, .30);
+    color: #fca5a5;
+}
+
+.monitor-btn.stop:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: white;
+}
+
+.monitor-btn:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+/* STATS */
+
+.monitor-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.monitor-stat {
+    padding: 19px;
+    background: #111d33;
+    border: 1px solid #253653;
+    border-radius: 12px;
+}
+
+.monitor-stat-label {
+    color: #8194b1;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+}
+
+.monitor-stat-value {
+    margin-top: 11px;
+    color: #f8fafc;
+    font-size: 25px;
+    font-weight: 850;
+}
+
+.monitor-stat-sub {
+    margin-top: 5px;
+    color: #64748b;
+    font-size: 9px;
+}
+
+/* PANELS */
+
+.monitor-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, .6fr);
+    gap: 18px;
+}
+
+.monitor-panel {
+    min-width: 0;
+    padding: 21px;
+    background: #111d33;
+    border: 1px solid #253653;
+    border-radius: 14px;
+}
+
+.monitor-panel h2 {
+    margin: 0 0 7px;
+    color: #f1f5f9;
+    font-size: 15px;
+}
+
+.monitor-panel-description {
+    margin: 0 0 17px;
+    color: #8194b1;
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+.monitor-message {
+    padding: 15px;
+    border: 1px solid #2a4163;
+    border-radius: 9px;
+    background: rgba(37, 99, 235, .06);
+    color: #a9caff;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.monitor-empty {
+    padding: 30px 15px;
+    text-align: center;
+    border: 1px dashed #304564;
+    border-radius: 9px;
+    color: #64748b;
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+/* ACTIVITY */
+
+.activity-list {
+    width: 100%;
+    overflow: hidden;
+}
+
+.activity-item {
+    display: grid;
+    grid-template-columns:
+        155px
+        75px
+        minmax(0, 1fr);
+
+    gap: 18px;
+    align-items: start;
+
+    width: 100%;
+    padding: 15px 20px;
+
+    border-bottom: 1px solid rgba(30, 41, 59, .7);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-time {
+    min-width: 0;
+    color: #64748b;
+    font-size: 9px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.activity-protocol {
+    color: #60a5fa;
+    font-size: 9px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.activity-summary {
+    min-width: 0;
+    max-width: 100%;
+    color: #cbd5e1;
+    font-size: 10px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.monitor-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.monitor-info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(43, 64, 95, .55);
+}
+
+.monitor-info-row:last-child {
+    border-bottom: none;
+}
+
+.monitor-info-label {
+    color: #8194b1;
+    font-size: 10px;
+}
+
+.monitor-info-value {
+    color: #dbeafe;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.monitor-phase {
+    margin-top: 18px;
+    padding: 15px;
+    border: 1px solid rgba(96, 165, 250, .20);
+    border-radius: 9px;
+    background: rgba(37, 99, 235, .05);
+}
+
+.monitor-phase-title {
+    margin-bottom: 8px;
+    color: #60a5fa;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.monitor-phase p {
+    margin: 0;
+    color: #8194b1;
+    font-size: 10px;
+    line-height: 1.7;
+}
+
+/* ML DIAGNOSTICS */
+
+.monitor-diagnostics {
+    margin-bottom: 18px;
+    padding: 21px;
+    background: #111d33;
+    border: 1px solid #253653;
+    border-radius: 14px;
+}
+
+.monitor-diagnostics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 16px;
+}
+
+.monitor-diagnostics-header h2 {
+    margin: 0;
+    color: #f1f5f9;
+    font-size: 15px;
+}
+
+.monitor-diagnostics-header p {
+    margin: 4px 0 0;
+    color: #8194b1;
+    font-size: 10px;
+}
+
+.monitor-diagnostics-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.monitor-diagnostic-card {
+    min-width: 0;
+    padding: 14px;
+    background: #0d172b;
+    border: 1px solid #253653;
+    border-radius: 10px;
+}
+
+.monitor-diagnostic-label {
+    color: #8194b1;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+}
+
+.monitor-diagnostic-value {
+    margin-top: 8px;
+    color: #f8fafc;
+    font-size: 20px;
+    font-weight: 850;
+    overflow-wrap: anywhere;
+}
+
+.monitor-diagnostic-value.good {
+    color: #86efac;
+}
+
+.monitor-diagnostic-value.warn {
+    color: #fbbf24;
+}
+
+.monitor-diagnostic-sub {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 9px;
+    line-height: 1.4;
+}
+
+.monitor-error {
+    display: none;
+    margin-top: 12px;
+    padding: 11px 14px;
+    border: 1px solid rgba(248, 113, 113, .30);
+    border-radius: 8px;
+    background: rgba(239, 68, 68, .08);
+    color: #fca5a5;
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+    .monitor-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .monitor-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .monitor-diagnostics-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 650px) {
+    .activity-item {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .activity-time {
+        white-space: normal;
+    }
+}
+
+@media (max-width: 520px) {
+    .monitor-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .monitor-heading h1 {
+        font-size: 25px;
+    }
+
+    .monitor-diagnostics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .monitor-control {
+        align-items: stretch;
+    }
+
+    .monitor-buttons {
+        width: 100%;
+    }
+
+    .monitor-btn {
+        flex: 1;
+    }
+}
+</style>
+
+
+<div class="monitor-page">
+
+    <!-- PAGE HEADING -->
+
+    <div class="monitor-heading">
+
+        <div>
+            <p class="monitor-eyebrow">REAL-TIME SECURITY</p>
+
+            <h1>Live Monitor</h1>
+
+            <p>
+                Monitor the CyberShield AI network sensor from one place.
+                Phase 3 connects live packet capture to bidirectional flow
+                aggregation and the existing CyberShield AI model.
+            </p>
+        </div>
+
+        <div id="statusPill" class="monitor-status-pill stopped">
+            <span class="monitor-status-dot"></span>
+            <span id="statusText">STOPPED</span>
+        </div>
+
+    </div>
+
+
+    <!-- MONITOR CONTROL -->
+
+    <section class="monitor-control">
+
+        <div class="monitor-control-copy">
+
+            <h2>Monitor Control</h2>
+
+            <p id="controlMessage">
+                {{ monitor.message }}
+            </p>
+
+        </div>
+
+
+        <div class="monitor-buttons">
+
+            <button
+                type="button"
+                id="startButton"
+                class="monitor-btn start"
+            >
+                Start Monitor
+            </button>
+
+            <button
+                type="button"
+                id="stopButton"
+                class="monitor-btn stop"
+                disabled
+            >
+                Stop Monitor
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- STATS -->
+
+    <section class="monitor-stats">
+
+        <div class="monitor-stat">
+
+            <div class="monitor-stat-label">
+                Packets Captured
+            </div>
+
+            <div
+                class="monitor-stat-value"
+                id="packetCount"
+            >
+                0
+            </div>
+
+            <div class="monitor-stat-sub">
+                Live Scapy capture
+            </div>
+
+        </div>
+
+
+        <div class="monitor-stat">
+
+            <div class="monitor-stat-label">
+                Traffic Volume
+            </div>
+
+            <div
+                class="monitor-stat-value"
+                id="byteCount"
+            >
+                0 B
+            </div>
+
+            <div class="monitor-stat-sub">
+                Live bytes
+            </div>
+
+        </div>
+
+
+        <div class="monitor-stat">
+
+            <div class="monitor-stat-label">
+                Threat Events
+            </div>
+
+            <div
+                class="monitor-stat-value"
+                id="eventCount"
+            >
+                0
+            </div>
+
+            <div class="monitor-stat-sub">
+                Confirmed non-BENIGN predictions
+            </div>
+
+        </div>
+
+
+        <div class="monitor-stat">
+
+            <div class="monitor-stat-label">
+                Interface
+            </div>
+
+            <div
+                class="monitor-stat-value"
+                id="interfaceValue"
+            >
+                —
+            </div>
+
+            <div class="monitor-stat-sub">
+                Network interface
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ML DIAGNOSTICS -->
+
+    <section class="monitor-diagnostics">
+
+        <div class="monitor-diagnostics-header">
+
+            <div>
+
+                <h2>
+                    ML Inference Diagnostics
+                </h2>
+
+                <p>
+                    Shows whether live flows are reaching the existing
+                    CyberShield model.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="monitor-diagnostics-grid">
+
+            <div class="monitor-diagnostic-card">
+
+                <div class="monitor-diagnostic-label">
+                    Flows Observed
+                </div>
+
+                <div
+                    class="monitor-diagnostic-value"
+                    id="flowsObserved"
+                >
+                    0
+                </div>
+
+                <div class="monitor-diagnostic-sub">
+                    Unique TCP/UDP flows
+                </div>
+
+            </div>
+
+
+            <div class="monitor-diagnostic-card">
+
+                <div class="monitor-diagnostic-label">
+                    Flows Analyzed
+                </div>
+
+                <div
+                    class="monitor-diagnostic-value"
+                    id="flowsAnalyzed"
+                >
+                    0
+                </div>
+
+                <div class="monitor-diagnostic-sub">
+                    ML inference runs
+                </div>
+
+            </div>
+
+
+            <div class="monitor-diagnostic-card">
+
+                <div class="monitor-diagnostic-label">
+                    BENIGN
+                </div>
+
+                <div
+                    class="monitor-diagnostic-value good"
+                    id="benignPredictions"
+                >
+                    0
+                </div>
+
+                <div class="monitor-diagnostic-sub">
+                    Normal predictions
+                </div>
+
+            </div>
+
+
+            <div class="monitor-diagnostic-card">
+
+                <div class="monitor-diagnostic-label">
+                    ATTACK
+                </div>
+
+                <div
+                    class="monitor-diagnostic-value warn"
+                    id="attackPredictions"
+                >
+                    0
+                </div>
+
+                <div class="monitor-diagnostic-sub">
+                    Attack predictions
+                </div>
+
+            </div>
+
+
+            <div class="monitor-diagnostic-card">
+
+                <div class="monitor-diagnostic-label">
+                    Inference Errors
+                </div>
+
+                <div
+                    class="monitor-diagnostic-value"
+                    id="inferenceErrors"
+                >
+                    0
+                </div>
+
+                <div class="monitor-diagnostic-sub">
+                    Model/feature errors
+                </div>
+
+            </div>
+
+
+            <div class="monitor-diagnostic-card">
+
+                <div class="monitor-diagnostic-label">
+                    Model Features
+                </div>
+
+                <div
+                    class="monitor-diagnostic-value"
+                    id="modelFeatures"
+                >
+                    0
+                </div>
+
+                <div class="monitor-diagnostic-sub">
+                    Expected live feature count
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            style="
+                margin-top:12px;
+                color:#8194b1;
+                font-size:10px;
+                line-height:1.6;
+            "
+        >
+            Last prediction:
+
+            <span
+                id="lastPrediction"
+                style="
+                    color:#dbeafe;
+                    font-weight:700;
+                "
+            >
+                Not analyzed yet
+            </span>
+
+        </div>
+
+
+        <div
+            id="monitorError"
+            class="monitor-error"
+        ></div>
+
+    </section>
+
+
+    <!-- MAIN PANELS -->
+
+    <div class="monitor-grid">
+
+        <!-- ACTIVITY -->
+
+        <section class="monitor-panel">
+
+            <h2>
+                Monitor Activity
+            </h2>
+
+            <p class="monitor-panel-description">
+                Recent packets captured by the live monitoring engine
+                will appear here.
+            </p>
+
+            <div
+                id="activityArea"
+                class="monitor-message"
+            >
+                {{ monitor.message }}
+            </div>
+
+        </section>
+
+
+        <!-- INFORMATION -->
+
+        <section class="monitor-panel">
+
+            <h2>
+                Monitor Information
+            </h2>
+
+            <p class="monitor-panel-description">
+                Current live packet-capture and ML inference state.
+            </p>
+
+
+            <div class="monitor-info-list">
+
+                <div class="monitor-info-row">
+
+                    <span class="monitor-info-label">
+                        Status
+                    </span>
+
+                    <span
+                        class="monitor-info-value"
+                        id="infoStatus"
+                    >
+                        Stopped
+                    </span>
+
+                </div>
+
+
+                <div class="monitor-info-row">
+
+                    <span class="monitor-info-label">
+                        Started
+                    </span>
+
+                    <span
+                        class="monitor-info-value"
+                        id="startedAt"
+                    >
+                        —
+                    </span>
+
+                </div>
+
+
+                <div class="monitor-info-row">
+
+                    <span class="monitor-info-label">
+                        Capture Engine
+                    </span>
+
+                    <span class="monitor-info-value">
+                        Scapy + Npcap
+                    </span>
+
+                </div>
+
+
+                <div class="monitor-info-row">
+
+                    <span class="monitor-info-label">
+                        ML Inference
+                    </span>
+
+                    <span class="monitor-info-value">
+                        Active
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="monitor-phase">
+
+                <div class="monitor-phase-title">
+                    Phase 3 — Flow + ML Detection
+                </div>
+
+                <p>
+                    Scapy captures live packets through Npcap, aggregates
+                    TCP/UDP traffic into bidirectional flows, and periodically
+                    sends mature flow features to the existing CyberShield AI
+                    model. The diagnostic counters above show whether
+                    inference is active.
+                </p>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</div>
+
+
+<!-- ==================================================
+     JAVASCRIPT
+     IMPORTANT:
+     This script is INSIDE the content block.
+     Do not move it into a separate scripts block.
+================================================== -->
+
+<script>
+
+"use strict";
+
+
+/* --------------------------------------------------
+   CSRF TOKEN
+-------------------------------------------------- */
+
+const csrfToken = "{{ csrf_token() }}";
+
+
+/* --------------------------------------------------
+   URLS GENERATED BY FLASK
+-------------------------------------------------- */
+
+const START_MONITOR_URL =
+    "{{ url_for('start_monitor') }}";
+
+const STOP_MONITOR_URL =
+    "{{ url_for('stop_monitor') }}";
+
+const MONITOR_STATUS_URL =
+    "{{ url_for('monitor_status') }}";
+
+
+/* --------------------------------------------------
+   FORMAT BYTES
+-------------------------------------------------- */
+
+function formatBytes(bytes) {
+
+    bytes = Number(bytes || 0);
+
+    if (bytes < 1) {
+        return "0 B";
+    }
+
+    const units = [
+        "B",
+        "KB",
+        "MB",
+        "GB",
+        "TB"
+    ];
+
+    const index = Math.min(
+        Math.floor(
+            Math.log(bytes) / Math.log(1024)
+        ),
+        units.length - 1
+    );
+
+    return (
+        (bytes / Math.pow(1024, index))
+            .toFixed(2)
+        + " "
+        + units[index]
+    );
+}
+
+
+/* --------------------------------------------------
+   FORMAT START TIME
+-------------------------------------------------- */
+
+function formatStartedAt(value) {
+
+    if (!value) {
+        return "—";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleString(
+        "en-IN",
+        {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true
+        }
+    );
+}
+
+
+/* --------------------------------------------------
+   SHOW ERROR
+-------------------------------------------------- */
+
+function showMonitorError(message) {
+
+    const errorBox =
+        document.getElementById("monitorError");
+
+    if (!errorBox) {
+        return;
+    }
+
+    errorBox.textContent =
+        message || "Unknown monitor error.";
+
+    errorBox.style.display = "block";
+}
+
+
+/* --------------------------------------------------
+   CLEAR ERROR
+-------------------------------------------------- */
+
+function clearMonitorError() {
+
+    const errorBox =
+        document.getElementById("monitorError");
+
+    if (!errorBox) {
+        return;
+    }
+
+    errorBox.textContent = "";
+    errorBox.style.display = "none";
+}
+
+
+/* --------------------------------------------------
+   UPDATE MONITOR UI
+-------------------------------------------------- */
+
+function updateMonitorUI(monitor) {
+
+    if (!monitor) {
+        return;
+    }
+
+    const running =
+        Boolean(monitor.running);
+
+
+    const statusPill =
+        document.getElementById("statusPill");
+
+    const statusText =
+        document.getElementById("statusText");
+
+    const startButton =
+        document.getElementById("startButton");
+
+    const stopButton =
+        document.getElementById("stopButton");
+
+
+    /* STATUS */
+
+    statusPill.classList.toggle(
+        "running",
+        running
+    );
+
+    statusPill.classList.toggle(
+        "stopped",
+        !running
+    );
+
+    statusText.textContent =
+        running
+            ? "RUNNING"
+            : "STOPPED";
+
+
+    /* BUTTONS */
+
+    startButton.disabled =
+        running;
+
+    stopButton.disabled =
+        !running;
+
+
+    /* CONTROL MESSAGE */
+
+    document.getElementById(
+        "controlMessage"
+    ).textContent =
+        monitor.message ||
+        "No monitor message.";
+
+
+    /* PACKETS */
+
+    document.getElementById(
+        "packetCount"
+    ).textContent =
+        Number(
+            monitor.packet_count || 0
+        ).toLocaleString("en-IN");
+
+
+    /* BYTES */
+
+    document.getElementById(
+        "byteCount"
+    ).textContent =
+        formatBytes(
+            monitor.byte_count || 0
+        );
+
+
+    /* THREATS */
+
+    document.getElementById(
+        "eventCount"
+    ).textContent =
+        Number(
+            monitor.threat_count || 0
+        ).toLocaleString("en-IN");
+
+
+    /* INTERFACE */
+
+    document.getElementById(
+        "interfaceValue"
+    ).textContent =
+        monitor.interface ||
+        "—";
+
+
+    /* FLOWS OBSERVED */
+
+    document.getElementById(
+        "flowsObserved"
+    ).textContent =
+        Number(
+            monitor.flows_observed || 0
+        ).toLocaleString("en-IN");
+
+
+    /* FLOWS ANALYZED */
+
+    document.getElementById(
+        "flowsAnalyzed"
+    ).textContent =
+        Number(
+            monitor.flows_analyzed || 0
+        ).toLocaleString("en-IN");
+
+
+    /* BENIGN */
+
+    document.getElementById(
+        "benignPredictions"
+    ).textContent =
+        Number(
+            monitor.benign_predictions || 0
+        ).toLocaleString("en-IN");
+
+
+    /* ATTACK */
+
+    document.getElementById(
+        "attackPredictions"
+    ).textContent =
+        Number(
+            monitor.attack_predictions || 0
+        ).toLocaleString("en-IN");
+
+
+    /* INFERENCE ERRORS */
+
+    document.getElementById(
+        "inferenceErrors"
+    ).textContent =
+        Number(
+            monitor.inference_errors || 0
+        ).toLocaleString("en-IN");
+
+
+    /* MODEL FEATURES */
+
+    document.getElementById(
+        "modelFeatures"
+    ).textContent =
+        Number(
+            monitor.model_features || 0
+        ).toLocaleString("en-IN");
+
+
+    /* LAST PREDICTION */
+
+    document.getElementById(
+        "lastPrediction"
+    ).textContent =
+        monitor.last_prediction ||
+        "Not analyzed yet";
+
+
+    /* INFORMATION PANEL */
+
+    document.getElementById(
+        "infoStatus"
+    ).textContent =
+        running
+            ? "Running"
+            : "Stopped";
+
+
+    document.getElementById(
+        "startedAt"
+    ).textContent =
+        formatStartedAt(
+            monitor.started_at
+        );
+
+
+    /* ACTIVITY */
+
+    updateActivity(
+        monitor
+    );
+}
+
+
+/* --------------------------------------------------
+   UPDATE ACTIVITY
+-------------------------------------------------- */
+
+function updateActivity(monitor) {
+
+    const activityArea =
+        document.getElementById(
+            "activityArea"
+        );
+
+    if (!activityArea) {
+        return;
+    }
+
+
+    let activity =
+        monitor.packet_activity;
+
+
+    if (!Array.isArray(activity)) {
+        activity = [];
+    }
+
+
+    if (activity.length === 0) {
+
+        activityArea.textContent =
+            monitor.running
+                ? "Monitor is running. Waiting for network packets..."
+                : "No live packets captured yet.";
+
+        return;
+    }
+
+
+    const list =
+        document.createElement(
+            "div"
+        );
+
+    list.className =
+        "activity-list";
+
+
+    activity
+        .slice()
+        .reverse()
+        .forEach(event => {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+            item.className =
+                "activity-item";
+
+
+            const time =
+                document.createElement(
+                    "div"
+                );
+
+            time.className =
+                "activity-time";
+
+            time.textContent =
+                event.time ||
+                "";
+
+
+            const protocol =
+                document.createElement(
+                    "div"
+                );
+
+            protocol.className =
+                "activity-protocol";
+
+            protocol.textContent =
+                event.protocol ||
+                "PACKET";
+
+
+            const summary =
+                document.createElement(
+                    "div"
+                );
+
+            summary.className =
+                "activity-summary";
+
+            summary.textContent =
+                event.message ||
+                "Packet captured";
+
+
+            item.appendChild(
+                time
+            );
+
+            item.appendChild(
+                protocol
+            );
+
+            item.appendChild(
+                summary
+            );
+
+            list.appendChild(
+                item
+            );
+        });
+
+
+    activityArea.innerHTML = "";
+
+    activityArea.appendChild(
+        list
+    );
+}
+
+
+/* --------------------------------------------------
+   SEND START / STOP REQUEST
+-------------------------------------------------- */
+
+async function sendMonitorAction(url) {
+
+    clearMonitorError();
+
+
+    const startButton =
+        document.getElementById(
+            "startButton"
+        );
+
+    const stopButton =
+        document.getElementById(
+            "stopButton"
+        );
+
+
+    startButton.disabled = true;
+    stopButton.disabled = true;
+
+
+    try {
+
+        const response =
+            await fetch(
+                url,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "X-CSRFToken":
+                            csrfToken,
+
+                        "X-Requested-With":
+                            "XMLHttpRequest"
+                    }
+                }
+            );
+
+
+        const contentType =
+            response.headers.get(
+                "content-type"
+            ) || "";
+
+
+        if (!contentType.includes(
+            "application/json"
+        )) {
+
+            const text =
+                await response.text();
+
+            throw new Error(
+                `Server returned a non-JSON response (${response.status}).`
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                `Request failed with HTTP ${response.status}.`
+            );
+        }
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.message ||
+                "Monitor action failed."
+            );
+        }
+
+
+        updateMonitorUI(
+            data.monitor
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "CyberShield Live Monitor error:",
+            error
+        );
+
+
+        showMonitorError(
+            error.message
+        );
+
+
+        /*
+         * Re-read the real server state.
+         * This prevents the UI from becoming stuck
+         * if the POST fails.
+         */
+        await refreshMonitorStatus();
+
+    }
+
+}
+
+
+/* --------------------------------------------------
+   START MONITOR
+-------------------------------------------------- */
+
+async function startMonitor() {
+
+    console.log(
+        "CyberShield: Start Monitor clicked"
+    );
+
+    await sendMonitorAction(
+        START_MONITOR_URL
+    );
+}
+
+
+/* --------------------------------------------------
+   STOP MONITOR
+-------------------------------------------------- */
+
+async function stopMonitor() {
+
+    console.log(
+        "CyberShield: Stop Monitor clicked"
+    );
+
+    await sendMonitorAction(
+        STOP_MONITOR_URL
+    );
+}
+
+
+/* --------------------------------------------------
+   REFRESH STATUS
+-------------------------------------------------- */
+
+async function refreshMonitorStatus() {
+
+    try {
+
+        const response =
+            await fetch(
+                MONITOR_STATUS_URL,
+                {
+                    method: "GET",
+
+                    headers: {
+                        "X-Requested-With":
+                            "XMLHttpRequest"
+                    },
+
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            data.success &&
+            data.monitor
+        ) {
+
+            updateMonitorUI(
+                data.monitor
+            );
+        }
+
+
+    } catch (error) {
+
+        console.warn(
+            "Monitor status polling failed:",
+            error
+        );
+
+    }
+}
+
+
+/* --------------------------------------------------
+   ATTACH BUTTON EVENTS
+-------------------------------------------------- */
+
+document
+    .getElementById("startButton")
+    .addEventListener(
+        "click",
+        startMonitor
+    );
+
+
+document
+    .getElementById("stopButton")
+    .addEventListener(
+        "click",
+        stopMonitor
+    );
+
+
+/* --------------------------------------------------
+   INITIAL SERVER STATE
+-------------------------------------------------- */
+
+updateMonitorUI(
+    {{ monitor | tojson }}
+);
+
+
+/* --------------------------------------------------
+   POLL SERVER EVERY 2 SECONDS
+-------------------------------------------------- */
+
+setInterval(
+    refreshMonitorStatus,
+    2000
+);
+
+
+/* --------------------------------------------------
+   DEBUG MESSAGE
+-------------------------------------------------- */
+
+console.log(
+    "CyberShield Live Monitor JavaScript loaded successfully."
+);
+
+</script>
+
+{% endblock %}

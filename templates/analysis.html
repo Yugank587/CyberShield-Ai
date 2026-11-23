@@ -1,0 +1,1911 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis | CyberShield AI{% endblock %}
+
+{% block content %}
+
+<style>
+/* ==========================================
+   CYBERSHIELD AI - ANALYSIS PAGE
+========================================== */
+
+.analysis-page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    color: #eaf1ff;
+}
+
+.analysis-page * {
+    box-sizing: border-box;
+}
+
+.analysis-page .analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.analysis-page .eyebrow {
+    color: #60a5fa;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+    margin-bottom: 9px;
+}
+
+.analysis-page h1 {
+    font-size: 29px;
+    font-weight: 750;
+    margin: 0 0 8px;
+}
+
+.analysis-page h2 {
+    font-size: 18px;
+    margin: 0;
+}
+
+.analysis-page .subtext {
+    color: #94a3b8;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.analysis-page .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 1px solid rgba(34,197,94,.25);
+    border-radius: 30px;
+    background: rgba(34,197,94,.08);
+    color: #4ade80;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.analysis-page .status-dot {
+    height: 8px;
+    width: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(74,222,128,.6);
+}
+
+.analysis-page .analysis-panel {
+    background: #111d33;
+    border: 1px solid #253653;
+    border-radius: 15px;
+    padding: 24px;
+    box-shadow: 0 8px 25px rgba(0,0,0,.12);
+}
+
+.analysis-page .panel-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+/* UPLOAD SECTION */
+
+.analysis-page .upload-panel {
+    background:
+        radial-gradient(
+            circle at top right,
+            rgba(37,99,235,.13),
+            transparent 42%
+        ),
+        #111d33;
+}
+
+.analysis-page .upload-area {
+    border: 1.5px dashed #3b5277;
+    border-radius: 13px;
+    padding: 35px 20px;
+    text-align: center;
+    background: rgba(30,48,76,.35);
+    transition: .2s ease;
+}
+
+.analysis-page .upload-area:hover {
+    border-color: #60a5fa;
+    background: rgba(37,99,235,.08);
+}
+
+.analysis-page .upload-icon {
+    width: 55px;
+    height: 55px;
+    border-radius: 15px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 15px;
+    background: rgba(59,130,246,.15);
+    color: #60a5fa;
+    font-size: 25px;
+}
+
+.analysis-page .upload-area h3 {
+    font-size: 16px;
+    margin: 0 0 8px;
+}
+
+.analysis-page .upload-area p {
+    font-size: 12px;
+    color: #94a3b8;
+    margin: 0 0 17px;
+}
+
+.analysis-page .file-input {
+    display: none;
+}
+
+.analysis-page .choose-file {
+    display: inline-block;
+    background: #263b5d;
+    color: #dbeafe;
+    border: 1px solid #3b5277;
+    border-radius: 8px;
+    padding: 10px 17px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.analysis-page .choose-file:hover {
+    background: #314d78;
+}
+
+.analysis-page .selected-file {
+    margin-top: 16px;
+    color: #93c5fd;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.analysis-page .upload-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.analysis-page .upload-info {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.analysis-page .analyze-btn {
+    background: linear-gradient(135deg,#2563eb,#3b82f6);
+    color: white;
+    border: none;
+    border-radius: 9px;
+    padding: 12px 23px;
+    font-size: 13px;
+    font-weight: 750;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.analysis-page .analyze-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 18px rgba(37,99,235,.3);
+}
+
+.analysis-page .analyze-btn:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* RESULT SECTION */
+
+.analysis-page .result-banner {
+    border: 1px solid rgba(34,197,94,.3);
+    background: rgba(34,197,94,.07);
+    border-radius: 13px;
+    padding: 19px;
+    margin-bottom: 20px;
+}
+
+.analysis-page .result-banner h3 {
+    font-size: 17px;
+    margin: 0 0 6px;
+    color: #86efac;
+}
+
+.analysis-page .result-banner p {
+    color: #a7f3d0;
+    font-size: 12px;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.analysis-page .result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+    gap: 14px;
+}
+
+.analysis-page .result-card {
+    background: #172640;
+    border: 1px solid #2b405f;
+    border-radius: 12px;
+    padding: 19px;
+    min-width: 0;
+}
+
+.analysis-page .result-card .label {
+    color: #94a3b8;
+    font-size: 11px;
+    margin: 0 0 12px;
+}
+
+.analysis-page .result-card .number {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0 0 7px;
+    overflow-wrap: anywhere;
+}
+
+.analysis-page .result-card .detail {
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.analysis-page .number.blue {
+    color: #60a5fa;
+}
+
+.analysis-page .number.red {
+    color: #fb7185;
+}
+
+.analysis-page .number.green {
+    color: #4ade80;
+}
+
+.analysis-page .number.orange {
+    color: #fbbf24;
+}
+
+/* VISUAL ANALYSIS */
+
+.analysis-page .visual-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 17px;
+    margin-top: 18px;
+}
+
+.analysis-page .visual-card {
+    background: #172640;
+    border: 1px solid #2b405f;
+    border-radius: 12px;
+    padding: 20px;
+    min-width: 0;
+}
+
+.analysis-page .visual-card h3 {
+    font-size: 14px;
+    margin: 0 0 20px;
+}
+
+.analysis-page .chart-layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    min-height: 185px;
+}
+
+.analysis-page .donut-chart {
+    width: 150px;
+    height: 150px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    position: relative;
+    display: grid;
+    place-items: center;
+}
+
+.analysis-page .donut-chart::before {
+    content: "";
+    position: absolute;
+    width: 102px;
+    height: 102px;
+    border-radius: 50%;
+    background: #172640;
+}
+
+.analysis-page .donut-center {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+
+.analysis-page .donut-center strong {
+    display: block;
+    font-size: 21px;
+}
+
+.analysis-page .donut-center span {
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.analysis-page .legend {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.analysis-page .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 11px;
+    color: #cbd5e1;
+}
+
+.analysis-page .legend-dot {
+    height: 9px;
+    width: 9px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.analysis-page .legend-item strong {
+    display: block;
+    color: white;
+    margin-top: 4px;
+}
+
+/* THREAT SEVERITY */
+
+.analysis-page .severity-box {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    background: #1d304c;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 13px;
+}
+
+.analysis-page .severity-icon {
+    height: 42px;
+    width: 42px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: rgba(251,113,133,.12);
+    color: #fb7185;
+    font-size: 20px;
+}
+
+.analysis-page .severity-box strong {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.analysis-page .severity-box span {
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.analysis-page .progress-item {
+    margin-top: 17px;
+}
+
+.analysis-page .progress-label {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 11px;
+    margin-bottom: 8px;
+    color: #cbd5e1;
+}
+
+.analysis-page .progress-track {
+    height: 8px;
+    background: #293d5c;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.analysis-page .progress-fill {
+    height: 100%;
+    border-radius: 20px;
+}
+
+/* ATTACK BREAKDOWN */
+
+.analysis-page .attack-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.analysis-page .attack-row {
+    display: grid;
+    grid-template-columns: minmax(120px,1fr) 2fr auto;
+    align-items: center;
+    gap: 14px;
+}
+
+.analysis-page .attack-name {
+    font-size: 12px;
+    color: #dbeafe;
+    overflow-wrap: anywhere;
+}
+
+.analysis-page .attack-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fca5a5;
+    text-align: right;
+}
+
+.analysis-page .attack-track {
+    height: 8px;
+    background: #293d5c;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.analysis-page .attack-fill {
+    height: 100%;
+    background: linear-gradient(90deg,#2563eb,#60a5fa);
+    border-radius: 20px;
+}
+
+/* CONFIDENCE */
+
+.analysis-page .confidence-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    background: #172640;
+    border: 1px solid #2b405f;
+    border-radius: 12px;
+    padding: 18px;
+    margin-top: 18px;
+}
+
+.analysis-page .confidence-summary strong {
+    font-size: 24px;
+    color: #60a5fa;
+}
+
+.analysis-page .confidence-summary span {
+    display: block;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 5px;
+}
+
+/* THREAT RECORDS */
+
+.analysis-page .filter-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.analysis-page .filter-control {
+    width: 100%;
+    min-width: 0;
+    padding: 11px 12px;
+    background: #172640;
+    color: #eaf1ff;
+    border: 1px solid #344967;
+    border-radius: 8px;
+    font-size: 12px;
+    outline: none;
+}
+
+.analysis-page .filter-control:focus {
+    border-color: #60a5fa;
+}
+
+.analysis-page .records-count {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+}
+
+.analysis-page .history-table-wrap {
+    overflow-x: auto;
+}
+
+/* COMPACT THREAT TABLE */
+
+.analysis-page #threatRecords .history-table-wrap {
+    max-height: 360px;
+    overflow: auto;
+    border: 1px solid #2b405f;
+    border-radius: 10px;
+}
+
+.analysis-page #threatRecords .history-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #172640;
+}
+
+.analysis-page #threatRecords .history-table td,
+.analysis-page #threatRecords .history-table th {
+    white-space: nowrap;
+}
+
+.analysis-page #threatRecords .history-table td:nth-child(3),
+.analysis-page #threatRecords .history-table td:nth-child(4) {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.analysis-page .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 650px;
+}
+
+.analysis-page .history-table th {
+    text-align: left;
+    padding: 13px 12px;
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 700;
+    border-bottom: 1px solid #2b405f;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+}
+
+.analysis-page .history-table td {
+    padding: 15px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(43,64,95,.6);
+    color: #dbeafe;
+    vertical-align: middle;
+}
+
+.analysis-page .history-table tr:last-child td {
+    border-bottom: none;
+}
+
+.analysis-page .history-table tr:hover td {
+    background: rgba(59,130,246,.04);
+}
+
+.analysis-page .file-name {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.analysis-page .history-status {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: rgba(34,197,94,.1);
+    color: #4ade80;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.analysis-page .threat-badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: rgba(251,113,133,.12);
+    color: #fb7185;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.analysis-page .confidence-cell {
+    min-width: 115px;
+}
+
+.analysis-page .confidence-value {
+    color: #93c5fd;
+    font-weight: 700;
+}
+
+.analysis-page .confidence-mini-track {
+    height: 5px;
+    background: #293d5c;
+    border-radius: 10px;
+    margin-top: 6px;
+    overflow: hidden;
+}
+
+.analysis-page .confidence-mini-fill {
+    height: 100%;
+    background: #3b82f6;
+    border-radius: 10px;
+}
+
+.analysis-page .detail-btn {
+    border: 1px solid #3b5277;
+    background: #263b5d;
+    color: #dbeafe;
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.analysis-page .detail-btn:hover {
+    background: #314d78;
+}
+
+.analysis-page .empty-state {
+    text-align: center;
+    padding: 35px 15px;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+/* RECORD DETAIL MODAL */
+
+.analysis-page .detail-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(2,8,23,.82);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.analysis-page .detail-modal.active {
+    display: flex;
+}
+
+.analysis-page .detail-modal-content {
+    width: min(650px,100%);
+    max-height: 85vh;
+    overflow-y: auto;
+    background: #111d33;
+    border: 1px solid #344967;
+    border-radius: 15px;
+    padding: 23px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+
+.analysis-page .detail-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.analysis-page .detail-modal-header h3 {
+    font-size: 17px;
+    margin: 0;
+}
+
+.analysis-page .modal-close {
+    border: 0;
+    background: #263b5d;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.analysis-page .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 12px;
+}
+
+.analysis-page .detail-field {
+    background: #172640;
+    border: 1px solid #2b405f;
+    border-radius: 9px;
+    padding: 13px;
+    min-width: 0;
+}
+
+.analysis-page .detail-field span {
+    display: block;
+    color: #94a3b8;
+    font-size: 10px;
+    margin-bottom: 7px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.analysis-page .detail-field strong {
+    display: block;
+    color: #eaf1ff;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+/* RESPONSIVE */
+
+@media(max-width: 900px) {
+    .analysis-page .result-grid {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+
+    .analysis-page .visual-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media(max-width: 650px) {
+    .analysis-page .analysis-panel {
+        padding: 17px;
+    }
+
+    .analysis-page h1 {
+        font-size: 23px;
+    }
+
+    .analysis-page .result-card .number {
+        font-size: 21px;
+    }
+
+    .analysis-page .upload-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .analysis-page .analyze-btn {
+        width: 100%;
+    }
+
+    .analysis-page .filter-row {
+        grid-template-columns: 1fr;
+    }
+
+    .analysis-page .attack-row {
+        grid-template-columns: 1fr auto;
+    }
+
+    .analysis-page .attack-track {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+
+    .analysis-page .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .analysis-page .confidence-summary {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+</style>
+
+
+<div class="analysis-page">
+
+    <!-- PAGE HEADER -->
+
+    <section class="analysis-header">
+
+        <div>
+            <p class="eyebrow">SECURITY OPERATIONS CENTER / DETECTION</p>
+
+            <h1>Threat Analysis</h1>
+
+            <p class="subtext">
+                Upload network traffic datasets and identify suspicious
+                activity using multiclass machine learning.
+            </p>
+        </div>
+
+        <div class="status-pill">
+            <span class="status-dot"></span>
+            ML MODEL READY
+        </div>
+
+    </section>
+
+
+    <!-- CSV UPLOAD -->
+
+    <section class="analysis-panel upload-panel">
+
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">DATASET PROCESSING</p>
+                <h2>Upload Network Dataset</h2>
+            </div>
+
+            <span class="status-pill">
+                CSV SUPPORTED
+            </span>
+        </div>
+
+        <form
+            method="POST"
+            action="{{ url_for('analysis') }}"
+            enctype="multipart/form-data"
+            id="analysisUploadForm"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+            <div class="upload-area">
+
+                <div class="upload-icon">⇧</div>
+
+                <h3>Select a network traffic CSV file</h3>
+
+                <p>
+                    Upload CIC-IDS2017 or another compatible
+                    network-flow dataset.
+                </p>
+
+                <label for="dataset" class="choose-file">
+                    Choose CSV File
+                </label>
+
+                <input
+                    type="file"
+                    id="dataset"
+                    name="dataset"
+                    class="file-input"
+                    accept=".csv,text/csv"
+                    required
+                >
+
+                <div class="selected-file" id="selectedFile">
+                    No file selected
+                </div>
+
+            </div>
+
+            <div class="upload-footer">
+
+                <span class="upload-info">
+                    Maximum upload size: 100 MB
+                    <br>
+                    Required format: CSV
+                </span>
+
+                <button
+                    type="submit"
+                    class="analyze-btn"
+                    id="analyzeButton"
+                    {% if not model_ready %}disabled{% endif %}
+                >
+                    Analyze Dataset →
+                </button>
+
+            </div>
+
+            {% if not model_ready %}
+                <p style="color:#fb7185;font-size:12px;margin-top:15px;">
+                    The trained ML model is unavailable.
+                    Please train the model first.
+                </p>
+            {% endif %}
+
+        </form>
+
+    </section>
+
+
+    <!-- ANALYSIS RESULT -->
+
+    {% if result %}
+
+        {% set total = result.total_records %}
+        {% set threats = result.threats_detected %}
+        {% set benign = result.benign_records %}
+        {% set skipped = result.skipped_records %}
+
+        {% set threat_pct = (threats / total * 100) if total else 0 %}
+        {% set benign_pct = (benign / total * 100) if total else 0 %}
+
+        {% if threat_pct >= 50 %}
+            {% set severity = "Critical" %}
+            {% set severity_color = "#fb7185" %}
+        {% elif threat_pct >= 10 %}
+            {% set severity = "High" %}
+            {% set severity_color = "#fb923c" %}
+        {% elif threat_pct > 0 %}
+            {% set severity = "Medium" %}
+            {% set severity_color = "#fbbf24" %}
+        {% else %}
+            {% set severity = "No threats detected" %}
+            {% set severity_color = "#4ade80" %}
+        {% endif %}
+
+        <section class="analysis-panel">
+
+            <div class="panel-heading">
+
+                <div>
+                    <p class="eyebrow">MACHINE LEARNING OUTPUT</p>
+                    <h2>Analysis Results</h2>
+                </div>
+
+                <span class="history-status">
+                    ANALYSIS COMPLETED
+                </span>
+
+            </div>
+
+
+            <div class="result-banner">
+
+                <h3>✓ Dataset successfully analyzed</h3>
+
+                <p>
+                    File: {{ result.filename }}
+                </p>
+
+            </div>
+
+
+            <!-- RESULT CARDS -->
+
+            <div class="result-grid">
+
+                <div class="result-card">
+                    <p class="label">Total Records</p>
+                    <p class="number blue">
+                        {{ "{:,}".format(total) }}
+                    </p>
+                    <span class="detail">Network flows analyzed</span>
+                </div>
+
+                <div class="result-card">
+                    <p class="label">Threats Detected</p>
+                    <p class="number red">
+                        {{ "{:,}".format(threats) }}
+                    </p>
+                    <span class="detail">Suspicious network flows</span>
+                </div>
+
+                <div class="result-card">
+                    <p class="label">Benign Records</p>
+                    <p class="number green">
+                        {{ "{:,}".format(benign) }}
+                    </p>
+                    <span class="detail">Classified as benign</span>
+                </div>
+
+                <div class="result-card">
+                    <p class="label">Skipped Records</p>
+                    <p class="number orange">
+                        {{ "{:,}".format(skipped) }}
+                    </p>
+                    <span class="detail">No usable feature values</span>
+                </div>
+
+            </div>
+
+
+            <!-- CHARTS -->
+
+            <div class="visual-grid">
+
+                <div class="visual-card">
+
+                    <h3>Traffic Classification</h3>
+
+                    <div class="chart-layout">
+
+                        <div
+                            class="donut-chart"
+                            style="
+                                background:
+                                conic-gradient(
+                                    #fb7185 0% {{ threat_pct }}%,
+                                    #4ade80 {{ threat_pct }}% 100%
+                                );
+                            "
+                        >
+
+                            <div class="donut-center">
+                                <strong>
+                                    {{ "%.1f"|format(threat_pct) }}%
+                                </strong>
+                                <span>Threats</span>
+                            </div>
+
+                        </div>
+
+                        <div class="legend">
+
+                            <div class="legend-item">
+                                <span
+                                    class="legend-dot"
+                                    style="background:#fb7185;"
+                                ></span>
+                                <div>
+                                    Threat traffic
+                                    <strong>{{ "{:,}".format(threats) }}</strong>
+                                </div>
+                            </div>
+
+                            <div class="legend-item">
+                                <span
+                                    class="legend-dot"
+                                    style="background:#4ade80;"
+                                ></span>
+                                <div>
+                                    Benign traffic
+                                    <strong>{{ "{:,}".format(benign) }}</strong>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- THREAT SEVERITY -->
+
+                <div class="visual-card">
+
+                    <h3>Threat Assessment</h3>
+
+                    <div class="severity-box">
+
+                        <div class="severity-icon">⚠</div>
+
+                        <div>
+                            <strong style="color:{{ severity_color }};">
+                                {{ severity }} Risk Level
+                            </strong>
+
+                            <span>
+                                Based on the percentage of detected
+                                threat records.
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <div class="progress-item">
+
+                        <div class="progress-label">
+                            <span>Threat traffic</span>
+                            <strong>{{ "%.2f"|format(threat_pct) }}%</strong>
+                        </div>
+
+                        <div class="progress-track">
+                            <div
+                                class="progress-fill"
+                                style="
+                                    width:{{ threat_pct }}%;
+                                    background:#fb7185;
+                                "
+                            ></div>
+                        </div>
+
+                    </div>
+
+                    <div class="progress-item">
+
+                        <div class="progress-label">
+                            <span>Benign traffic</span>
+                            <strong>{{ "%.2f"|format(benign_pct) }}%</strong>
+                        </div>
+
+                        <div class="progress-track">
+                            <div
+                                class="progress-fill"
+                                style="
+                                    width:{{ benign_pct }}%;
+                                    background:#4ade80;
+                                "
+                            ></div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ATTACK TYPE BREAKDOWN -->
+
+            <section class="visual-card" style="margin-top:18px;">
+
+                <h3>Attack Type Identification</h3>
+
+                <p class="subtext" style="margin-bottom:20px;">
+                    Distribution of attack categories predicted by the
+                    multiclass machine-learning model.
+                </p>
+
+                {% if result.attack_breakdown %}
+
+                    <div class="attack-list">
+
+                        {% for attack in result.attack_breakdown %}
+
+                            <div class="attack-row">
+
+                                <div class="attack-name">
+                                    {{ attack.attack_type }}
+                                </div>
+
+                                <div class="attack-track">
+                                    <div
+                                        class="attack-fill"
+                                        style="width:{{ attack.percentage }}%;"
+                                    ></div>
+                                </div>
+
+                                <div class="attack-count">
+                                    {{ "{:,}".format(attack.count) }}
+                                    ({{ "%.1f"|format(attack.percentage) }}%)
+                                </div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-state">
+                        No attack categories were detected.
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+
+            <!-- CONFIDENCE SUMMARY -->
+
+            <div class="confidence-summary">
+
+                <div>
+                    <strong>
+                        {{ "%.2f"|format(result.average_confidence) }}%
+                    </strong>
+                    <span>
+                        Average confidence across detected threat predictions
+                    </span>
+                </div>
+
+                <div style="text-align:right;">
+                    <strong>
+                        {{ "{:,}".format(result.records_displayed) }}
+                    </strong>
+                    <span>
+                        Threat records displayed
+                    </span>
+                </div>
+
+            </div>
+
+            <p class="subtext" style="margin-top:12px;">
+                Confidence represents the maximum class probability returned
+                by the Random Forest model. It is not a guarantee that a
+                prediction is correct or a calibrated probability of maliciousness.
+            </p>
+
+        </section>
+
+
+        <!-- ANALYSIS HISTORY - MOVED UP -->
+
+        <section class="analysis-panel">
+
+            <div class="panel-heading">
+
+                <div>
+                    <p class="eyebrow">PREVIOUS DATASET SCANS</p>
+                    <h2>Analysis History</h2>
+                </div>
+
+                <span class="status-pill">
+                    {{ runs|length }} RECENT RUNS
+                </span>
+
+            </div>
+
+            {% if runs %}
+
+                <div class="history-table-wrap">
+
+                    <table class="history-table">
+
+                        <thead>
+                            <tr>
+                                <th>Dataset</th>
+                                <th>Records</th>
+                                <th>Threats</th>
+                                <th>Threat Rate</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for run in runs %}
+
+                                {% set run_rate = (
+                                    run.threats_detected / run.total_records * 100
+                                ) if run.total_records else 0 %}
+
+                                <tr>
+
+                                    <td>
+                                        <div class="file-name">
+                                            {{ run.filename }}
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        {{ "{:,}".format(run.total_records) }}
+                                    </td>
+
+                                    <td style="color:#fb7185;font-weight:700;">
+                                        {{ "{:,}".format(run.threats_detected) }}
+                                    </td>
+
+                                    <td>
+                                        {{ "%.2f"|format(run_rate) }}%
+                                    </td>
+
+                                    <td>
+                                        {{ run.created_at|datetime12 }}
+                                    </td>
+
+                                    <td>
+                                        <span class="history-status">
+                                            {{ run.status|upper }}
+                                        </span>
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state">
+                    <p>No analysis history available yet.</p>
+                    <p>
+                        Upload your first network dataset to get started.
+                    </p>
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+        <!-- DETAILED THREAT RECORDS -->
+
+        <section class="analysis-panel" id="threatRecords">
+
+            <div class="panel-heading">
+
+                <div>
+                    <p class="eyebrow">SECURITY INVESTIGATION</p>
+                    <h2>Detailed Threat Records</h2>
+                    <p class="subtext" style="margin-top:6px;">
+                        Scroll inside the table to inspect individual threats.
+                    </p>
+                </div>
+
+                <span class="threat-badge">
+                    {{ "{:,}".format(threats) }} THREATS
+                </span>
+
+            </div>
+
+            <div class="filter-row">
+
+                <input
+                    type="search"
+                    class="filter-control"
+                    id="threatSearch"
+                    placeholder="Search attack type, IP, port or record..."
+                >
+
+                <select
+                    class="filter-control"
+                    id="attackFilter"
+                >
+                    <option value="">All attack types</option>
+
+                    {% for attack in result.attack_breakdown %}
+                        <option value="{{ attack.attack_type|lower }}">
+                            {{ attack.attack_type }}
+                        </option>
+                    {% endfor %}
+
+                </select>
+
+                <select
+                    class="filter-control"
+                    id="confidenceFilter"
+                >
+                    <option value="">All confidence levels</option>
+                    <option value="90">90% and above</option>
+                    <option value="80">80% and above</option>
+                    <option value="70">70% and above</option>
+                </select>
+
+            </div>
+
+            <div class="records-count" id="visibleRecordCount">
+                Showing {{ result.threat_records|length }} of
+                {{ result.threat_records|length }} displayed threat records.
+            </div>
+
+            {% if result.threat_records %}
+
+                <div class="history-table-wrap">
+
+                    <table class="history-table" id="threatTable">
+
+                        <thead>
+                            <tr>
+                                <th>Record</th>
+                                <th>Attack Type</th>
+                                <th>Source IP</th>
+                                <th>Destination IP</th>
+                                <th>Protocol</th>
+                                <th>Confidence</th>
+                                <th>Severity</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for record in result.threat_records %}
+
+                                <tr
+                                    class="threat-record-row"
+                                    data-attack="{{ record.attack_type|lower }}"
+                                    data-confidence="{{ record.confidence }}"
+                                >
+
+                                    <td>
+                                        #{{ record.record_number }}
+                                    </td>
+
+                                    <td>
+                                        <span class="threat-badge">
+                                            {{ record.attack_type }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        {{ record.details.source_ip }}
+                                    </td>
+
+                                    <td>
+                                        {{ record.details.destination_ip }}
+                                    </td>
+
+                                    <td>
+                                        {{ record.details.protocol }}
+                                    </td>
+
+                                    <td class="confidence-cell">
+
+                                        <span class="confidence-value">
+                                            {{ "%.2f"|format(record.confidence) }}%
+                                        </span>
+
+                                        <div class="confidence-mini-track">
+                                            <div
+                                                class="confidence-mini-fill"
+                                                style="width:{{ record.confidence }}%;"
+                                            ></div>
+                                        </div>
+
+                                    </td>
+
+                                    <td>
+                                        {{ record.severity }}
+                                    </td>
+
+                                    <td>
+
+                                        <button
+                                            type="button"
+                                            class="detail-btn"
+                                            data-record="{{ loop.index0 }}"
+                                        >
+                                            View details
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                {% if result.threats_detected > result.records_displayed %}
+
+                    <p class="subtext" style="margin-top:15px;">
+                        Showing the first {{ result.records_displayed }}
+                        threat records out of {{ "{:,}".format(result.threats_detected) }}
+                        total detected threats. The aggregate statistics above
+                        include all analyzed records.
+                    </p>
+
+                {% endif %}
+
+            {% else %}
+
+                <div class="empty-state">
+                    No threats were detected in this dataset.
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+        <!-- THREAT DETAIL MODAL -->
+
+        <div class="detail-modal" id="detailModal">
+
+            <div class="detail-modal-content">
+
+                <div class="detail-modal-header">
+
+                    <h3>Threat Record Details</h3>
+
+                    <button
+                        type="button"
+                        class="modal-close"
+                        id="modalClose"
+                        aria-label="Close details"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+                <div class="detail-grid" id="detailGrid"></div>
+
+            </div>
+
+        </div>
+
+        <script id="threatRecordData" type="application/json">
+            {{ result.threat_records|tojson }}
+        </script>
+
+    {% else %}
+
+        <!-- EMPTY ANALYSIS HISTORY -->
+
+        <section class="analysis-panel">
+
+            <div class="panel-heading">
+
+                <div>
+                    <p class="eyebrow">PREVIOUS DATASET SCANS</p>
+                    <h2>Analysis History</h2>
+                </div>
+
+                <span class="status-pill">
+                    {{ runs|length }} RECENT RUNS
+                </span>
+
+            </div>
+
+            {% if runs %}
+
+                <div class="history-table-wrap">
+
+                    <table class="history-table">
+
+                        <thead>
+                            <tr>
+                                <th>Dataset</th>
+                                <th>Records</th>
+                                <th>Threats</th>
+                                <th>Threat Rate</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for run in runs %}
+
+                                {% set run_rate = (
+                                    run.threats_detected / run.total_records * 100
+                                ) if run.total_records else 0 %}
+
+                                <tr>
+
+                                    <td>
+                                        <div class="file-name">
+                                            {{ run.filename }}
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        {{ "{:,}".format(run.total_records) }}
+                                    </td>
+
+                                    <td style="color:#fb7185;font-weight:700;">
+                                        {{ "{:,}".format(run.threats_detected) }}
+                                    </td>
+
+                                    <td>
+                                        {{ "%.2f"|format(run_rate) }}%
+                                    </td>
+
+                                    <td>
+                                        {{ run.created_at|datetime12 }}
+                                    </td>
+
+                                    <td>
+                                        <span class="history-status">
+                                            {{ run.status|upper }}
+                                        </span>
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state">
+                    <p>No analysis history available yet.</p>
+                    <p>
+                        Upload your first network dataset to get started.
+                    </p>
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    {% endif %}
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ------------------------------------------
+    // CSV FILE SELECTION
+    // ------------------------------------------
+
+    const fileInput = document.getElementById("dataset");
+    const selectedFile = document.getElementById("selectedFile");
+    const analyzeButton = document.getElementById("analyzeButton");
+    const uploadForm = document.getElementById("analysisUploadForm");
+
+    if (fileInput && selectedFile && analyzeButton && uploadForm) {
+
+        fileInput.addEventListener("change", function () {
+
+            if (fileInput.files.length > 0) {
+
+                const file = fileInput.files[0];
+
+                selectedFile.textContent =
+                    file.name + " (" +
+                    (file.size / (1024 * 1024)).toFixed(2) +
+                    " MB)";
+
+                analyzeButton.disabled = false;
+
+            } else {
+
+                selectedFile.textContent = "No file selected";
+                analyzeButton.disabled = true;
+
+            }
+
+        });
+
+        uploadForm.addEventListener("submit", function (event) {
+
+            if (!fileInput.files.length) {
+                event.preventDefault();
+                alert("Please select a CSV file first.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+
+            if (!file.name.toLowerCase().endsWith(".csv")) {
+                event.preventDefault();
+                alert("Please select a valid CSV file.");
+                return;
+            }
+
+            if (file.size === 0) {
+                event.preventDefault();
+                alert("The selected file is empty.");
+                return;
+            }
+
+            if (file.size > 100 * 1024 * 1024) {
+                event.preventDefault();
+                alert("The file exceeds the 100 MB upload limit.");
+                return;
+            }
+
+            analyzeButton.disabled = true;
+            analyzeButton.textContent = "Analyzing dataset...";
+
+        });
+
+    }
+
+
+    // ------------------------------------------
+    // THREAT RECORD SEARCH AND FILTERING
+    // ------------------------------------------
+
+    const threatSearch = document.getElementById("threatSearch");
+    const attackFilter = document.getElementById("attackFilter");
+    const confidenceFilter = document.getElementById("confidenceFilter");
+
+    const threatRows = Array.from(
+        document.querySelectorAll(".threat-record-row")
+    );
+
+    const visibleRecordCount = document.getElementById(
+        "visibleRecordCount"
+    );
+
+    function filterThreatRecords() {
+
+        if (!threatRows.length) {
+            return;
+        }
+
+        const searchValue = threatSearch
+            ? threatSearch.value.toLowerCase().trim()
+            : "";
+
+        const selectedAttack = attackFilter
+            ? attackFilter.value.toLowerCase()
+            : "";
+
+        const minimumConfidence = confidenceFilter
+            ? Number(confidenceFilter.value || 0)
+            : 0;
+
+        let visibleCount = 0;
+
+        threatRows.forEach(function (row) {
+
+            const rowText = row.textContent.toLowerCase();
+            const rowAttack = row.dataset.attack || "";
+            const rowConfidence = Number(
+                row.dataset.confidence || 0
+            );
+
+            const matchesSearch = rowText.includes(searchValue);
+
+            const matchesAttack = (
+                !selectedAttack ||
+                rowAttack === selectedAttack
+            );
+
+            const matchesConfidence = (
+                rowConfidence >= minimumConfidence
+            );
+
+            const visible = (
+                matchesSearch &&
+                matchesAttack &&
+                matchesConfidence
+            );
+
+            row.style.display = visible ? "" : "none";
+
+            if (visible) {
+                visibleCount++;
+            }
+
+        });
+
+        if (visibleRecordCount) {
+            visibleRecordCount.textContent =
+                "Showing " + visibleCount +
+                " of " + threatRows.length +
+                " displayed threat records.";
+        }
+
+    }
+
+    if (threatSearch) {
+        threatSearch.addEventListener("input", filterThreatRecords);
+    }
+
+    if (attackFilter) {
+        attackFilter.addEventListener("change", filterThreatRecords);
+    }
+
+    if (confidenceFilter) {
+        confidenceFilter.addEventListener("change", filterThreatRecords);
+    }
+
+
+    // ------------------------------------------
+    // THREAT DETAIL MODAL
+    // ------------------------------------------
+
+    const detailModal = document.getElementById("detailModal");
+    const detailGrid = document.getElementById("detailGrid");
+    const modalClose = document.getElementById("modalClose");
+
+    const recordDataElement = document.getElementById(
+        "threatRecordData"
+    );
+
+    let records = [];
+
+    if (recordDataElement) {
+
+        try {
+            records = JSON.parse(recordDataElement.textContent);
+        } catch (error) {
+            console.error("Could not read threat record data:", error);
+        }
+
+    }
+
+    function openRecordDetails(index) {
+
+        const record = records[index];
+
+        if (!record || !detailModal || !detailGrid) {
+            return;
+        }
+
+        const fields = {
+            "Record number": record.record_number,
+            "Attack type": record.attack_type,
+            "Confidence": record.confidence + "%",
+            "Severity": record.severity,
+            "Source IP": record.details.source_ip,
+            "Destination IP": record.details.destination_ip,
+            "Source port": record.details.source_port,
+            "Destination port": record.details.destination_port,
+            "Protocol": record.details.protocol,
+            "Timestamp": record.details.timestamp,
+            "Flow duration": record.details.flow_duration,
+            "Flow packets": record.details.flow_packets
+        };
+
+        detailGrid.innerHTML = "";
+
+        Object.entries(fields).forEach(function ([label, value]) {
+
+            const field = document.createElement("div");
+            field.className = "detail-field";
+
+            const fieldLabel = document.createElement("span");
+            fieldLabel.textContent = label;
+
+            const fieldValue = document.createElement("strong");
+            fieldValue.textContent = (
+                value === null ||
+                value === undefined ||
+                value === ""
+            ) ? "N/A" : String(value);
+
+            field.appendChild(fieldLabel);
+            field.appendChild(fieldValue);
+
+            detailGrid.appendChild(field);
+
+        });
+
+        detailModal.classList.add("active");
+
+    }
+
+    document.querySelectorAll(".detail-btn").forEach(function (button) {
+
+        button.addEventListener("click", function () {
+
+            const index = Number(button.dataset.record);
+
+            openRecordDetails(index);
+
+        });
+
+    });
+
+    function closeModal() {
+
+        if (detailModal) {
+            detailModal.classList.remove("active");
+        }
+
+    }
+
+    if (modalClose) {
+        modalClose.addEventListener("click", closeModal);
+    }
+
+    if (detailModal) {
+
+        detailModal.addEventListener("click", function (event) {
+
+            if (event.target === detailModal) {
+                closeModal();
+            }
+
+        });
+
+    }
+
+    document.addEventListener("keydown", function (event) {
+
+        if (event.key === "Escape") {
+            closeModal();
+        }
+
+    });
+
+});
+</script>
+
+{% endblock %}

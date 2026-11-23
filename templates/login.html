@@ -1,0 +1,535 @@
+
+{% extends "base.html" %}
+
+{% block title %}Login | CyberShield AI{% endblock %}
+
+{% block content %}
+
+<style>
+/* =====================================
+   CYBERSHIELD AI - LOGIN PAGE
+===================================== */
+
+.login-page {
+    min-height: calc(100vh - 190px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 35px 15px;
+    color: #eaf1ff;
+}
+
+.login-page * {
+    box-sizing: border-box;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 36px;
+    background: #111d33;
+    border: 1px solid #293e5d;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+
+/* BRAND */
+
+.login-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.login-brand-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 17px;
+    background: linear-gradient(135deg,#2563eb,#3b82f6);
+    box-shadow: 0 8px 25px rgba(37,99,235,.25);
+    margin-bottom: 16px;
+}
+
+.login-brand-icon svg {
+    width: 37px;
+    height: 37px;
+    stroke: white;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.login-brand h1 {
+    font-size: 23px;
+    font-weight: 850;
+    letter-spacing: -.5px;
+    margin: 0;
+    color: #f8fafc;
+}
+
+.login-brand h1 span {
+    color: #60a5fa;
+}
+
+.login-brand p {
+    color: #8194b1;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: 1.6px;
+    margin: 9px 0 0;
+}
+
+/* HEADING */
+
+.login-heading {
+    text-align: center;
+    margin-bottom: 27px;
+}
+
+.login-heading h2 {
+    color: #f1f5f9;
+    font-size: 21px;
+    margin: 0 0 8px;
+}
+
+.login-heading p {
+    color: #94a3b8;
+    font-size: 11px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* FORM */
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+}
+
+.login-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.login-field label {
+    color: #cbd5e1;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.login-input-wrap {
+    position: relative;
+}
+
+.login-input-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 17px;
+    height: 17px;
+    stroke: #8194b1;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.login-input {
+    width: 100%;
+    height: 47px;
+    padding: 0 43px;
+    border: 1px solid #304563;
+    border-radius: 9px;
+    background: #172640;
+    color: #f1f5f9;
+    outline: none;
+    font-size: 12px;
+    transition: .2s ease;
+}
+
+.login-input::placeholder {
+    color: #71839f;
+}
+
+.login-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+}
+
+/* PASSWORD VISIBILITY */
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.password-toggle:hover {
+    color: #60a5fa;
+}
+
+.password-toggle svg {
+    position: static;
+    width: 17px;
+    height: 17px;
+    transform: none;
+    pointer-events: none;
+}
+
+/* REMEMBER / INFO */
+
+.login-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #94a3b8;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.login-info svg {
+    width: 15px;
+    height: 15px;
+    min-width: 15px;
+    stroke: #60a5fa;
+    fill: none;
+    stroke-width: 2;
+}
+
+/* BUTTON */
+
+.login-submit {
+    width: 100%;
+    height: 47px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: none;
+    border-radius: 9px;
+    background: linear-gradient(100deg,#2563eb,#3b82f6);
+    color: white;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(37,99,235,.2);
+    transition: .2s ease;
+}
+
+.login-submit:hover {
+    background: linear-gradient(100deg,#1d4ed8,#2563eb);
+    transform: translateY(-2px);
+    box-shadow: 0 9px 22px rgba(37,99,235,.28);
+}
+
+.login-submit svg {
+    width: 17px;
+    height: 17px;
+    stroke: white;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* REGISTER */
+
+.login-register {
+    text-align: center;
+    border-top: 1px solid #293e5d;
+    padding-top: 21px;
+    margin-top: 23px;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.login-register a {
+    color: #60a5fa;
+    text-decoration: none;
+    font-weight: 750;
+}
+
+.login-register a:hover {
+    color: #93c5fd;
+    text-decoration: underline;
+}
+
+/* SECURITY FOOTER */
+
+.login-security {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    margin-top: 23px;
+    color: #71839f;
+    font-size: 9px;
+}
+
+.login-security svg {
+    width: 14px;
+    height: 14px;
+    stroke: #4ade80;
+    fill: none;
+    stroke-width: 2;
+}
+
+/* MOBILE */
+
+@media(max-width:500px) {
+    .login-page {
+        padding: 20px 5px;
+    }
+
+    .login-card {
+        padding: 26px 20px;
+    }
+}
+</style>
+
+
+<div class="login-page">
+
+    <section class="login-card">
+
+        <!-- BRAND -->
+
+        <div class="login-brand">
+
+            <div class="login-brand-icon">
+
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/>
+                    <path d="m9 12 2 2 4-4"/>
+                </svg>
+
+            </div>
+
+            <h1>
+                CYBERSHIELD <span>AI</span>
+            </h1>
+
+            <p>INTELLIGENT SECURITY PLATFORM</p>
+
+        </div>
+
+
+        <!-- LOGIN HEADING -->
+
+        <div class="login-heading">
+
+            <h2>Welcome Back</h2>
+
+            <p>
+                Sign in to access your cybersecurity
+                monitoring dashboard.
+            </p>
+
+        </div>
+
+
+        <!-- LOGIN FORM -->
+
+        <form method="POST" action="{{ url_for('login') }}" class="login-form">
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >
+
+
+            <!-- USERNAME OR EMAIL -->
+
+            <div class="login-field">
+
+                <label for="identity">
+                    Username or Email
+                </label>
+
+                <div class="login-input-wrap">
+
+                    <svg viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+
+                    <input
+                        type="text"
+                        id="identity"
+                        name="identity"
+                        class="login-input"
+                        placeholder="Enter your username or email"
+                        autocomplete="username"
+                        required
+                        autofocus
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- PASSWORD -->
+
+            <div class="login-field">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <div class="login-input-wrap">
+
+                    <svg viewBox="0 0 24 24">
+                        <rect x="3" y="11" width="18" height="11" rx="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="login-input"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        id="togglePassword"
+                        aria-label="Show password"
+                        title="Show password"
+                    >
+
+                        <svg id="eyeIcon" viewBox="0 0 24 24">
+                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- SECURITY INFORMATION -->
+
+            <div class="login-info">
+
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/>
+                    <path d="m9 12 2 2 4-4"/>
+                </svg>
+
+                Your login credentials are protected.
+
+            </div>
+
+
+            <!-- SUBMIT -->
+
+            <button type="submit" class="login-submit">
+
+                <svg viewBox="0 0 24 24">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                    <polyline points="10 17 15 12 10 7"/>
+                    <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+
+                Sign In to Dashboard
+
+            </button>
+
+        </form>
+
+
+        <!-- REGISTRATION LINK -->
+
+        <div class="login-register">
+
+            Don't have an account?
+
+            <a href="{{ url_for('register') }}">
+                Create an account
+            </a>
+
+        </div>
+
+
+        <!-- SECURITY FOOTER -->
+
+        <div class="login-security">
+
+            <svg viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/>
+                <path d="m9 12 2 2 4-4"/>
+            </svg>
+
+            CYBERSHIELD AI · SECURE ACCESS
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const passwordInput = document.getElementById("password");
+    const toggleButton = document.getElementById("togglePassword");
+    const eyeIcon = document.getElementById("eyeIcon");
+
+    if (!passwordInput || !toggleButton || !eyeIcon) {
+        return;
+    }
+
+    toggleButton.addEventListener("click", function () {
+
+        const isPassword = passwordInput.type === "password";
+
+        passwordInput.type = isPassword ? "text" : "password";
+
+        toggleButton.setAttribute(
+            "aria-label",
+            isPassword ? "Hide password" : "Show password"
+        );
+
+        toggleButton.setAttribute(
+            "title",
+            isPassword ? "Hide password" : "Show password"
+        );
+
+        eyeIcon.innerHTML = isPassword
+            ? '<path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.5 10.5 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-4 4.5"/><path d="M6.2 6.2C3.5 8 2 12 2 12s3.5 7 10 7c1.4 0 2.7-.3 3.8-.8"/>'
+            : '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>';
+
+    });
+
+});
+</script>
+
+{% endblock %}

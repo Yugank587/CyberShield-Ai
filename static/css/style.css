@@ -1,0 +1,992 @@
+/* =====================================================
+   CYBERSHIELD AI
+   GLOBAL DESIGN SYSTEM
+   Dark Navy / Blue SOC Interface
+===================================================== */
+
+:root {
+    color-scheme: dark;
+
+    --bg-main: #080f1d;
+    --bg-header: #0b1526;
+    --bg-panel: #101d31;
+    --bg-panel-hover: #14243b;
+    --bg-input: #0b1628;
+
+    --border: #243752;
+    --border-light: #304765;
+
+    --text-primary: #edf4ff;
+    --text-secondary: #a5b5cc;
+    --text-muted: #71839e;
+
+    --blue: #3b82f6;
+    --blue-light: #60a5fa;
+    --blue-dark: #1d4ed8;
+
+    --green: #34d399;
+    --red: #fb7185;
+    --orange: #fb923c;
+    --yellow: #fbbf24;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+
+    --shadow-panel: 0 10px 30px rgba(0, 0, 0, .16);
+}
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+
+    background:
+        radial-gradient(
+            circle at 15% 0%,
+            rgba(37, 99, 235, .08),
+            transparent 30%
+        ),
+        var(--bg-main);
+
+    color: var(--text-primary);
+
+    font-family:
+        Inter,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+    font-size: 14px;
+    line-height: 1.6;
+
+    -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    color: var(--blue-light);
+    text-decoration: none;
+}
+
+a:hover {
+    color: #93c5fd;
+}
+
+img,
+svg {
+    max-width: 100%;
+}
+
+::selection {
+    background: rgba(59, 130, 246, .35);
+    color: #fff;
+}
+
+
+/* =====================================================
+   GLOBAL HEADER
+===================================================== */
+
+.cs-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    width: 100%;
+
+    background: rgba(11, 21, 38, .96);
+    border-bottom: 1px solid var(--border);
+
+    box-shadow: 0 6px 25px rgba(0, 0, 0, .18);
+
+    backdrop-filter: blur(16px);
+}
+
+.cs-header-inner {
+    width: 100%;
+    max-width: 1600px;
+    min-height: 76px;
+
+    margin: 0 auto;
+    padding: 0 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+}
+
+
+/* =====================================================
+   BRAND
+===================================================== */
+
+.cs-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.cs-brand-icon {
+    width: 43px;
+    height: 43px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: linear-gradient(
+        135deg,
+        #1d4ed8,
+        #3b82f6
+    );
+
+    box-shadow: 0 5px 18px rgba(37, 99, 235, .3);
+}
+
+.cs-brand-icon svg {
+    width: 25px;
+    height: 25px;
+
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.cs-brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.cs-brand-name {
+    color: #f8fafc;
+
+    font-size: 18px;
+    font-weight: 850;
+    letter-spacing: -.5px;
+    line-height: 1.2;
+}
+
+.cs-brand-name span {
+    color: var(--blue-light);
+}
+
+.cs-brand-caption {
+    color: var(--text-muted);
+
+    font-size: 8px;
+    font-weight: 750;
+    letter-spacing: 1.35px;
+}
+
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+.cs-navigation {
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.cs-nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 10px 14px;
+
+    border: 1px solid transparent;
+    border-radius: 9px;
+
+    color: var(--text-secondary);
+
+    font-size: 12px;
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    transition:
+        background .2s ease,
+        color .2s ease,
+        border-color .2s ease;
+}
+
+.cs-nav-link:hover {
+    background: var(--bg-panel-hover);
+    color: #fff;
+}
+
+.cs-nav-link.active {
+    color: var(--blue-light);
+
+    background: rgba(59, 130, 246, .13);
+    border-color: rgba(59, 130, 246, .2);
+}
+
+.nav-symbol {
+    font-size: 15px;
+    line-height: 1;
+}
+
+
+/* =====================================================
+   USER PROFILE
+===================================================== */
+
+.cs-user-area {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+
+    flex-shrink: 0;
+}
+
+.cs-user-profile {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    padding: 5px 12px 5px 5px;
+
+    border: 1px solid var(--border);
+    border-radius: 30px;
+
+    background: #12213a;
+}
+
+.cs-user-avatar {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: linear-gradient(
+        135deg,
+        #2563eb,
+        #60a5fa
+    );
+
+    color: white;
+
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.cs-user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.cs-user-name {
+    max-width: 115px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    color: #eaf2ff;
+
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.cs-user-role {
+    color: var(--text-muted);
+
+    font-size: 8px;
+    font-weight: 750;
+    letter-spacing: .7px;
+}
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+.cs-logout-form {
+    margin: 0;
+    padding: 0;
+}
+
+.cs-logout-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 10px 13px;
+
+    border: 1px solid rgba(248, 113, 113, .25);
+    border-radius: 9px;
+
+    background: rgba(239, 68, 68, .08);
+    color: #fca5a5;
+
+    font-size: 11px;
+    font-weight: 750;
+
+    transition: .2s ease;
+}
+
+.cs-logout-button:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: white;
+}
+
+.cs-logout-button svg {
+    width: 15px;
+    height: 15px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* =====================================================
+   LOGIN / REGISTER NAVIGATION
+===================================================== */
+
+.cs-auth-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cs-auth-link {
+    padding: 10px 15px;
+
+    border: 1px solid transparent;
+    border-radius: 9px;
+
+    color: var(--text-secondary);
+
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.cs-auth-link:hover {
+    background: var(--bg-panel-hover);
+    color: white;
+}
+
+.cs-register-link {
+    background: var(--blue-dark);
+    color: white;
+}
+
+.cs-register-link:hover {
+    background: var(--blue);
+    color: white;
+}
+
+
+/* =====================================================
+   MAIN CONTENT
+===================================================== */
+
+.page-container {
+    width: 100%;
+    max-width: 1600px;
+
+    flex: 1;
+
+    margin: 0 auto;
+    padding: 30px 34px;
+
+    min-height: calc(100vh - 160px);
+}
+
+
+/* =====================================================
+   GLOBAL PANELS
+===================================================== */
+
+.panel,
+.stat-card,
+.auth-card {
+    min-width: 0;
+
+    padding: 23px;
+
+    background: var(--bg-panel);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+
+    box-shadow: var(--shadow-panel);
+}
+
+.panel {
+    margin-top: 22px;
+}
+
+.panel h2 {
+    color: var(--text-primary);
+}
+
+
+/* =====================================================
+   GLOBAL TYPOGRAPHY
+===================================================== */
+
+h1,
+h2,
+h3,
+h4 {
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+h1 {
+    margin: 0;
+    font-size: clamp(25px, 3vw, 34px);
+    font-weight: 800;
+    letter-spacing: -.7px;
+}
+
+h2 {
+    font-size: 20px;
+    font-weight: 750;
+}
+
+h3 {
+    font-size: 16px;
+    font-weight: 750;
+}
+
+.eyebrow {
+    margin: 0 0 9px;
+
+    color: var(--blue-light);
+
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+}
+
+.muted {
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+
+/* =====================================================
+   GLOBAL FORM CONTROLS
+===================================================== */
+
+label {
+    color: #cbd8eb;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    min-width: 0;
+
+    padding: 12px 13px;
+
+    border: 1px solid var(--border-light);
+    border-radius: 9px;
+
+    outline: none;
+
+    background: var(--bg-input);
+    color: var(--text-primary);
+
+    font-size: 13px;
+
+    transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #687c98;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--blue-light);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, .12);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 11px 17px;
+
+    border: 1px solid #3979df;
+    border-radius: 9px;
+
+    background: linear-gradient(
+        135deg,
+        #2563eb,
+        #3b82f6
+    );
+
+    color: white;
+
+    font-size: 12px;
+    font-weight: 750;
+
+    text-decoration: none;
+
+    transition: .2s ease;
+}
+
+.button:hover {
+    transform: translateY(-1px);
+
+    background: linear-gradient(
+        135deg,
+        #1d4ed8,
+        #2563eb
+    );
+
+    color: white;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, .2);
+}
+
+.button-small {
+    padding: 8px 12px;
+    font-size: 11px;
+}
+
+.button-secondary {
+    border-color: var(--border-light);
+    background: #1a2b45;
+    color: #dbeafe;
+}
+
+.button-secondary:hover {
+    background: #263d5e;
+}
+
+
+/* =====================================================
+   STATUS NOTICES
+===================================================== */
+
+.notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+
+    margin: 0 0 18px;
+    padding: 13px 16px;
+
+    border: 1px solid #655027;
+    border-radius: 10px;
+
+    background: #292316;
+    color: #f4d99b;
+
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.notice-indicator {
+    width: 8px;
+    height: 8px;
+
+    flex-shrink: 0;
+    margin-top: 5px;
+
+    border-radius: 50%;
+    background: var(--yellow);
+}
+
+.notice.success {
+    border-color: rgba(52, 211, 153, .28);
+    background: rgba(16, 44, 39, .9);
+    color: #8ce6c4;
+}
+
+.notice.success .notice-indicator {
+    background: var(--green);
+}
+
+.notice.error {
+    border-color: rgba(251, 113, 133, .3);
+    background: rgba(48, 26, 36, .9);
+    color: #ffb7c5;
+}
+
+.notice.error .notice-indicator {
+    background: var(--red);
+}
+
+.notice.info {
+    border-color: rgba(96, 165, 250, .3);
+    background: rgba(20, 43, 72, .9);
+    color: #bfdbfe;
+}
+
+.notice.info .notice-indicator {
+    background: var(--blue-light);
+}
+
+
+/* =====================================================
+   AUTHENTICATION
+===================================================== */
+
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    width: 100%;
+    padding: 35px 0;
+}
+
+.auth-card {
+    width: min(470px, 100%);
+    padding: 32px;
+}
+
+.auth-card h1 {
+    font-size: 28px;
+}
+
+.auth-card form {
+    display: grid;
+    gap: 11px;
+    margin-top: 25px;
+}
+
+.auth-card .button {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.auth-switch {
+    margin: 23px 0 0;
+
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-align: center;
+}
+
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+.site-footer {
+    border-top: 1px solid var(--border);
+    background: #0a1424;
+}
+
+.footer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+
+    padding: 23px 15px;
+
+    text-align: center;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    color: #dbeafe;
+
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: .8px;
+}
+
+.footer-mark {
+    display: grid;
+    place-items: center;
+
+    width: 25px;
+    height: 25px;
+
+    border-radius: 7px;
+
+    background: #1d4ed8;
+    color: white;
+
+    font-size: 9px;
+}
+
+.footer-inner p {
+    margin: 0;
+
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.footer-copy {
+    color: var(--text-muted);
+
+    font-size: 8px;
+    font-weight: 750;
+    letter-spacing: 1.2px;
+}
+
+
+/* =====================================================
+   SCROLLBARS
+===================================================== */
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #344967 #0b1628;
+}
+
+::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0b1628;
+}
+
+::-webkit-scrollbar-thumb {
+    border: 2px solid #0b1628;
+    border-radius: 20px;
+    background: #344967;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #49658a;
+}
+
+
+/* =====================================================
+   RESPONSIVE HEADER
+===================================================== */
+
+@media (max-width: 1050px) {
+
+    .cs-header-inner {
+        flex-wrap: wrap;
+        gap: 13px;
+
+        padding: 13px 22px;
+    }
+
+    .cs-navigation {
+        order: 3;
+
+        flex-basis: 100%;
+        justify-content: flex-start;
+
+        overflow-x: auto;
+        padding-bottom: 3px;
+    }
+
+    .cs-nav-link {
+        padding: 9px 12px;
+    }
+
+    .cs-user-area {
+        margin-left: auto;
+    }
+
+    .page-container {
+        padding: 25px 22px;
+    }
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 700px) {
+
+    .cs-header-inner {
+        padding: 12px 16px;
+    }
+
+    .cs-brand-name {
+        font-size: 16px;
+    }
+
+    .cs-brand-icon {
+        width: 38px;
+        height: 38px;
+    }
+
+    .cs-user-profile {
+        padding: 4px;
+    }
+
+    .cs-user-details {
+        display: none;
+    }
+
+    .cs-logout-button {
+        padding: 9px;
+    }
+
+    .cs-logout-button span {
+        display: none;
+    }
+
+    .cs-navigation {
+        gap: 3px;
+    }
+
+    .cs-nav-link {
+        padding: 9px 11px;
+        font-size: 11px;
+    }
+
+    .page-container {
+        padding: 22px 16px;
+    }
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 480px) {
+
+    .cs-header-inner {
+        padding: 11px 12px;
+        gap: 10px;
+    }
+
+    .cs-brand {
+        gap: 8px;
+    }
+
+    .cs-brand-name {
+        font-size: 14px;
+    }
+
+    .cs-brand-caption {
+        font-size: 6px;
+        letter-spacing: 1px;
+    }
+
+    .cs-brand-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+    }
+
+    .cs-brand-icon svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    .cs-auth-links {
+        gap: 4px;
+    }
+
+    .cs-auth-link {
+        padding: 8px 9px;
+        font-size: 10px;
+    }
+
+    .cs-navigation {
+        justify-content: space-between;
+    }
+
+    .cs-nav-link {
+        gap: 5px;
+        padding: 8px 9px;
+        font-size: 10px;
+    }
+
+    .nav-symbol {
+        display: none;
+    }
+
+    .page-container {
+        padding: 18px 12px;
+    }
+
+    .auth-card {
+        padding: 23px;
+    }
+
+    .footer-inner p {
+        max-width: 300px;
+    }
+}

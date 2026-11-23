@@ -1,0 +1,544 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}CyberShield AI{% endblock %}</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        /* =================================
+           CYBERSHIELD AI - GLOBAL HEADER
+        ================================= */
+
+        .cs-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            width: 100%;
+            background: #0d192d;
+            border-bottom: 1px solid #253653;
+            box-shadow: 0 5px 20px rgba(0,0,0,.15);
+        }
+
+        .cs-header-inner {
+            width: 100%;
+            max-width: 1500px;
+            min-height: 76px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+        }
+
+        /* BRAND */
+
+        .cs-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .cs-brand-icon {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: linear-gradient(135deg,#2563eb,#3b82f6);
+            box-shadow: 0 4px 14px rgba(37,99,235,.25);
+        }
+
+        .cs-brand-icon svg {
+            width: 25px;
+            height: 25px;
+            stroke: white;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .cs-brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .cs-brand-name {
+            color: #f8fafc;
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: -.5px;
+            line-height: 1;
+        }
+
+        .cs-brand-name span {
+            color: #60a5fa;
+        }
+
+        .cs-brand-caption {
+            color: #8194b1;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 1.35px;
+        }
+
+        /* NAVIGATION */
+
+        .cs-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .cs-nav-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #a9bad2;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 650;
+            white-space: nowrap;
+            transition: .2s ease;
+        }
+
+        .cs-nav-link:hover {
+            background: #172640;
+            color: #ffffff;
+        }
+
+        .cs-nav-link.active {
+            background: rgba(59,130,246,.15);
+            color: #60a5fa;
+            box-shadow: inset 0 0 0 1px rgba(59,130,246,.18);
+        }
+
+        /* USER AREA - RIGHT SIDE */
+
+        .cs-user-area {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .cs-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 5px 10px 5px 5px;
+            border: 1px solid #293d5c;
+            background: #14233b;
+            border-radius: 30px;
+        }
+
+        .cs-user-avatar {
+            height: 30px;
+            width: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .cs-user-name {
+            color: #e2e8f0;
+            font-size: 11px;
+            font-weight: 650;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* LOGOUT BUTTON */
+
+        .cs-logout-form {
+            margin: 0;
+            padding: 0;
+        }
+
+        .cs-logout-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 10px 14px;
+            border: 1px solid rgba(248,113,113,.28);
+            border-radius: 8px;
+            background: rgba(239,68,68,.09);
+            color: #fca5a5;
+            font-size: 11px;
+            font-weight: 750;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        .cs-logout-button:hover {
+            background: #dc2626;
+            border-color: #dc2626;
+            color: white;
+        }
+
+        .cs-logout-button svg {
+            width: 15px;
+            height: 15px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* AUTHENTICATION LINKS */
+
+        .cs-auth-links {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cs-auth-link {
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .cs-auth-link:hover {
+            background: #172640;
+            color: white;
+        }
+
+        .cs-register-link {
+            background: #2563eb;
+            color: white;
+        }
+
+        .cs-register-link:hover {
+            background: #3b82f6;
+            color: white;
+        }
+
+        /* MAIN PAGE */
+
+        .page-container {
+            width: 100%;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 28px 30px;
+            min-height: calc(100vh - 140px);
+        }
+
+        /* FOOTER */
+
+        .site-footer {
+            border-top: 1px solid #253653;
+            background: #0d192d;
+            color: #8194b1;
+            text-align: center;
+            padding: 19px 15px;
+            font-size: 10px;
+            letter-spacing: .3px;
+        }
+
+        /* MOBILE NAVIGATION */
+
+        @media (max-width: 950px) {
+
+            .cs-header-inner {
+                padding: 13px 20px;
+                flex-wrap: wrap;
+                gap: 13px;
+            }
+
+            .cs-navigation {
+                order: 3;
+                flex-basis: 100%;
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 3px;
+            }
+
+            .cs-nav-link {
+                padding: 9px 12px;
+            }
+
+            .cs-user-area {
+                margin-left: auto;
+            }
+
+            .page-container {
+                padding: 22px 20px;
+            }
+        }
+
+        @media (max-width: 520px) {
+
+            .cs-header-inner {
+                padding: 12px 14px;
+            }
+
+            .cs-brand-name {
+                font-size: 16px;
+            }
+
+            .cs-brand-icon {
+                width: 37px;
+                height: 37px;
+            }
+
+            .cs-brand-caption {
+                font-size: 7px;
+            }
+
+            .cs-user-profile {
+                padding: 4px;
+            }
+
+            .cs-user-name {
+                display: none;
+            }
+
+            .cs-logout-button {
+                padding: 9px;
+                font-size: 0;
+            }
+
+            .cs-logout-button svg {
+                width: 17px;
+                height: 17px;
+            }
+
+            .cs-navigation {
+                gap: 2px;
+            }
+
+            .cs-nav-link {
+                padding: 9px 10px;
+                font-size: 11px;
+            }
+
+            .page-container {
+                padding: 18px 13px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- GLOBAL NAVIGATION HEADER -->
+
+    <header class="cs-header">
+
+        <div class="cs-header-inner">
+
+            <!-- BRAND -->
+
+            <a class="cs-brand" href="{{ url_for('home') }}">
+
+                <span class="cs-brand-icon">
+
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/>
+                        <path d="m9 12 2 2 4-4"/>
+                    </svg>
+
+                </span>
+
+                <span class="cs-brand-text">
+
+                    <span class="cs-brand-name">
+                        CYBERSHIELD <span>AI</span>
+                    </span>
+
+                    <span class="cs-brand-caption">
+                        SECURITY PLATFORM
+                    </span>
+
+                </span>
+
+            </a>
+
+
+            <!-- NAVIGATION LINKS -->
+
+            {% if current_user.is_authenticated %}
+
+                <nav class="cs-navigation">
+
+                    <a
+                        class="cs-nav-link {{ 'active' if request.endpoint == 'home' else '' }}"
+                        href="{{ url_for('home') }}"
+                    >
+                        Dashboard
+                    </a>
+
+                    <a
+                        class="cs-nav-link {{ 'active' if request.endpoint == 'analysis' else '' }}"
+                        href="{{ url_for('analysis') }}"
+                    >
+                        Analysis
+                    </a>
+
+                    <a
+                        class="cs-nav-link {{ 'active' if request.endpoint in ['alerts', 'resolve_alert'] else '' }}"
+                        href="{{ url_for('alerts') }}"
+                    >
+                        Alerts
+                    </a>
+
+                    <a
+                        class="cs-nav-link {{ 'active' if request.endpoint == 'reports' else '' }}"
+                        href="{{ url_for('reports') }}"
+                    >
+                        Reports
+                    </a>
+
+                    <a
+                        class="cs-nav-link {{ 'active' if request.endpoint == 'monitor' else '' }}"
+                        href="{{ url_for('monitor') }}"
+                    >
+                        Live Monitor
+                    </a>
+
+                </nav>
+
+
+                <!-- USER AND LOGOUT - RIGHT SIDE -->
+
+                <div class="cs-user-area">
+
+                    <div class="cs-user-profile">
+
+                        <span class="cs-user-avatar">
+                            {{ current_user.username[:1] }}
+                        </span>
+
+                        <span class="cs-user-name">
+                            {{ current_user.username }}
+                        </span>
+
+                    </div>
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for('logout') }}"
+                        class="cs-logout-form"
+                    >
+
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token() }}"
+                        >
+
+                        <button
+                            type="submit"
+                            class="cs-logout-button"
+                            title="Log out"
+                        >
+
+                            <svg viewBox="0 0 24 24">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+
+                            Log Out
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            {% else %}
+
+                <div class="cs-auth-links">
+
+                    <a
+                        href="{{ url_for('login') }}"
+                        class="cs-auth-link"
+                    >
+                        Login
+                    </a>
+
+                    <a
+                        href="{{ url_for('register') }}"
+                        class="cs-auth-link cs-register-link"
+                    >
+                        Create Account
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="page-container">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% for category, message in messages %}
+
+                <div class="notice {{ category }}">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+    </main>
+
+
+    <!-- FOOTER -->
+
+    <footer class="site-footer">
+
+        AI-Based Cybersecurity Threat Detection and Monitoring System
+
+        <br>
+
+        <span style="display:inline-block;margin-top:5px;">
+            CYBERSHIELD AI · MACHINE LEARNING SECURITY
+        </span>
+
+    </footer>
+
+</body>
+</html>

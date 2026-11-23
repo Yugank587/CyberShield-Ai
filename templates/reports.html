@@ -1,0 +1,643 @@
+
+{% extends "base.html" %}
+
+{% block title %}Reports | CyberShield AI{% endblock %}
+
+{% block content %}
+
+<style>
+.reports-page {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    color: #eaf1ff;
+}
+
+.reports-page * {
+    box-sizing: border-box;
+}
+
+.reports-page .eyebrow {
+    color: #60a5fa;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+    margin: 0 0 8px;
+}
+
+.reports-page .muted {
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.reports-page .panel {
+    background: #111d33;
+    border: 1px solid #253653;
+    border-radius: 14px;
+    padding: 22px;
+}
+
+.reports-page .page-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.reports-page h1 {
+    font-size: 28px;
+    margin: 0 0 8px;
+}
+
+.reports-page h2 {
+    font-size: 17px;
+    margin: 0;
+}
+
+/* SUMMARY */
+
+.reports-page .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 14px;
+}
+
+.reports-page .stat-card {
+    padding: 19px;
+    background: #111d33;
+    border: 1px solid #253653;
+    border-radius: 12px;
+}
+
+.reports-page .stat-label {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.reports-page .stat-value {
+    margin-top: 13px;
+    color: #f1f5f9;
+    font-size: 27px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.reports-page .stat-card.threat .stat-value {
+    color: #fb7185;
+}
+
+.reports-page .stat-card.benign .stat-value {
+    color: #4ade80;
+}
+
+.reports-page .stat-card.scans .stat-value {
+    color: #60a5fa;
+}
+
+/* REPORT TABLE */
+
+.reports-page .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 19px;
+}
+
+.reports-page .report-table {
+    width: 100%;
+    min-width: 750px;
+    border-collapse: collapse;
+}
+
+.reports-page .report-table th {
+    text-align: left;
+    padding: 14px 12px;
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #2b405f;
+}
+
+.reports-page .report-table td {
+    padding: 16px 12px;
+    border-bottom: 1px solid rgba(43,64,95,.6);
+    color: #dbeafe;
+    font-size: 11px;
+    vertical-align: middle;
+}
+
+.reports-page .report-table tr:last-child td {
+    border-bottom: none;
+}
+
+.reports-page .report-table tbody tr:hover {
+    background: rgba(59,130,246,.04);
+}
+
+.reports-page .dataset-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 220px;
+}
+
+.reports-page .dataset-icon {
+    width: 35px;
+    height: 35px;
+    min-width: 35px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    background: rgba(59,130,246,.13);
+    color: #60a5fa;
+    font-size: 16px;
+}
+
+.reports-page .dataset-name strong {
+    display: block;
+    color: #f1f5f9;
+    font-size: 11px;
+    max-width: 260px;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+
+.reports-page .dataset-name small {
+    display: block;
+    color: #8194b1;
+    font-size: 9px;
+    margin-top: 4px;
+}
+
+.reports-page .threat-number {
+    color: #fb7185 !important;
+    font-weight: 800;
+}
+
+.reports-page .rate-cell {
+    min-width: 110px;
+}
+
+.reports-page .rate-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 750;
+}
+
+.reports-page .rate-track {
+    width: 85px;
+    height: 5px;
+    border-radius: 20px;
+    background: #2b405f;
+    overflow: hidden;
+}
+
+.reports-page .rate-fill {
+    height: 100%;
+    background: #fb7185;
+    border-radius: 20px;
+}
+
+.reports-page .status {
+    display: inline-block;
+    padding: 6px 9px;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.reports-page .status.completed {
+    color: #4ade80;
+    background: rgba(34,197,94,.1);
+}
+
+.reports-page .status.other {
+    color: #fbbf24;
+    background: rgba(251,191,36,.1);
+}
+
+/* REPORT INSIGHTS */
+
+.reports-page .insight-grid {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 15px;
+}
+
+.reports-page .insight-card {
+    padding: 19px;
+    background: #172640;
+    border: 1px solid #2b405f;
+    border-radius: 11px;
+}
+
+.reports-page .insight-card h3 {
+    color: #eaf1ff;
+    font-size: 13px;
+    margin: 0 0 12px;
+}
+
+.reports-page .insight-card p {
+    color: #94a3b8;
+    font-size: 11px;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.reports-page .empty-state {
+    text-align: center;
+    padding: 45px 15px;
+}
+
+.reports-page .empty-icon {
+    font-size: 35px;
+    margin-bottom: 12px;
+}
+
+.reports-page .primary-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 16px;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.reports-page .primary-link:hover {
+    background: #3b82f6;
+}
+
+@media(max-width:850px) {
+    .reports-page .stats-grid {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+}
+
+@media(max-width:600px) {
+    .reports-page .panel {
+        padding: 16px;
+    }
+
+    .reports-page .insight-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .reports-page h1 {
+        font-size: 23px;
+    }
+
+    .reports-page .stat-card {
+        padding: 14px;
+    }
+
+    .reports-page .stat-value {
+        font-size: 22px;
+    }
+}
+</style>
+
+
+<div class="reports-page">
+
+    <!-- HEADER -->
+
+    <section class="page-heading">
+
+        <div>
+            <p class="eyebrow">SECURITY OPERATIONS CENTER / REPORTING</p>
+
+            <h1>Security Reports</h1>
+
+            <p class="muted">
+                Review historical network traffic analyses,
+                threat detection statistics, and scan results.
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for('analysis') }}"
+            class="primary-link"
+        >
+            + New Analysis
+        </a>
+
+    </section>
+
+
+    <!-- CALCULATE TOTALS -->
+
+    {% set total_scans = runs|length %}
+    {% set total_records = namespace(value=0) %}
+    {% set total_threats = namespace(value=0) %}
+
+    {% for run in runs %}
+        {% set total_records.value = total_records.value + (run.total_records or 0) %}
+        {% set total_threats.value = total_threats.value + (run.threats_detected or 0) %}
+    {% endfor %}
+
+    {% set total_benign = total_records.value - total_threats.value %}
+
+    {% set overall_rate = (
+        total_threats.value / total_records.value * 100
+    ) if total_records.value else 0 %}
+
+
+    <!-- SUMMARY CARDS -->
+
+    <section class="stats-grid">
+
+        <div class="stat-card scans">
+
+            <div class="stat-label">Total Scans</div>
+
+            <div class="stat-value">
+                {{ total_scans }}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">Total Records Analyzed</div>
+
+            <div class="stat-value">
+                {{ "{:,}".format(total_records.value) }}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card threat">
+
+            <div class="stat-label">Threats Detected</div>
+
+            <div class="stat-value">
+                {{ "{:,}".format(total_threats.value) }}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card benign">
+
+            <div class="stat-label">Benign Records</div>
+
+            <div class="stat-value">
+                {{ "{:,}".format(total_benign) }}
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- REPORT HISTORY -->
+
+    <section class="panel">
+
+        <div class="page-heading">
+
+            <div>
+                <p class="eyebrow">ANALYSIS ARCHIVE</p>
+                <h2>Dataset Scan History</h2>
+            </div>
+
+            <span class="muted">
+                {{ total_scans }} saved reports
+            </span>
+
+        </div>
+
+
+        {% if runs %}
+
+            <div class="table-wrapper">
+
+                <table class="report-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Dataset</th>
+                            <th>Total Records</th>
+                            <th>Threats</th>
+                            <th>Threat Rate</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for run in runs %}
+
+                            {% set record_count = run.total_records or 0 %}
+                            {% set threat_count = run.threats_detected or 0 %}
+
+                            {% set threat_rate = (
+                                threat_count / record_count * 100
+                            ) if record_count else 0 %}
+
+                            <tr>
+
+                                <td>
+
+                                    <div class="dataset-name">
+
+                                        <span class="dataset-icon">▤</span>
+
+                                        <div>
+
+                                            <strong>
+                                                {{ run.filename }}
+                                            </strong>
+
+                                            <small>
+                                                Analysis ID: #{{ run.id }}
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <td>
+                                    {{ "{:,}".format(record_count) }}
+                                </td>
+
+
+                                <td class="threat-number">
+                                    {{ "{:,}".format(threat_count) }}
+                                </td>
+
+
+                                <td class="rate-cell">
+
+                                    <span class="rate-label">
+                                        {{ "%.2f"|format(threat_rate) }}%
+                                    </span>
+
+                                    <div class="rate-track">
+
+                                        <div
+                                            class="rate-fill"
+                                            style="width:{{ [threat_rate,100]|min }}%;"
+                                        ></div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <td>
+                                    {{ run.created_at|datetime12 }}
+                                </td>
+
+
+                                <td>
+
+                                    {% if run.status|lower == "completed" %}
+
+                                        <span class="status completed">
+                                            COMPLETED
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="status other">
+                                            {{ run.status|upper }}
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="empty-state">
+
+                <div class="empty-icon">📊</div>
+
+                <h3 style="color:#eaf1ff;font-size:16px;">
+                    No Reports Available
+                </h3>
+
+                <p class="muted">
+                    Your completed dataset analyses will
+                    automatically appear here.
+                </p>
+
+                <div style="margin-top:18px;">
+
+                    <a
+                        href="{{ url_for('analysis') }}"
+                        class="primary-link"
+                    >
+                        Start First Analysis →
+                    </a>
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- OVERALL INSIGHTS -->
+
+    <section class="panel">
+
+        <div class="page-heading">
+
+            <div>
+                <p class="eyebrow">PERFORMANCE OVERVIEW</p>
+                <h2>Detection Summary</h2>
+            </div>
+
+        </div>
+
+
+        <div class="insight-grid">
+
+            <div class="insight-card">
+
+                <h3>Overall Threat Detection Rate</h3>
+
+                <div style="font-size:27px;font-weight:800;color:#fb7185;margin-bottom:12px;">
+                    {{ "%.2f"|format(overall_rate) }}%
+                </div>
+
+                <div style="height:8px;background:#2b405f;border-radius:20px;overflow:hidden;">
+
+                    <div
+                        style="height:100%;width:{{ [overall_rate,100]|min }}%;background:#fb7185;border-radius:20px;"
+                    ></div>
+
+                </div>
+
+                <p style="margin-top:12px;">
+                    Percentage of analyzed records classified
+                    as attacks across all saved scans.
+                </p>
+
+            </div>
+
+
+            <div class="insight-card">
+
+                <h3>Analysis Coverage</h3>
+
+                <div style="font-size:27px;font-weight:800;color:#60a5fa;margin-bottom:12px;">
+                    {{ "{:,}".format(total_records.value) }}
+                </div>
+
+                <p>
+                    Total network-flow records processed
+                    across {{ total_scans }} saved analysis runs.
+                </p>
+
+                <p style="margin-top:12px;">
+                    These totals are cumulative. If the same
+                    dataset is uploaded more than once, each
+                    saved run contributes to the totals.
+                </p>
+
+            </div>
+
+        </div>
+
+        <p class="muted" style="margin:18px 0 0;">
+            Reports summarize binary machine-learning
+            classifications. They do not represent unique
+            security incidents or independently verified attacks.
+        </p>
+
+    </section>
+
+</div>
+
+{% endblock %}

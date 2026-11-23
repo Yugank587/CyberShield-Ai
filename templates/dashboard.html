@@ -1,0 +1,1771 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | CyberShield AI{% endblock %}
+
+{% block content %}
+
+<style>
+/* =========================================================
+   CYBERSHIELD AI — PROFESSIONAL SECURITY DASHBOARD
+   Compact SOC layout
+========================================================= */
+
+.cyber-dashboard {
+    --bg: #07111f;
+    --panel: #0d1a2d;
+    --panel-hover: #111f35;
+    --panel-soft: #0a1628;
+
+    --border: #223653;
+    --border-soft: rgba(148, 163, 184, 0.13);
+
+    --text: #f1f5f9;
+    --muted: #94a8c2;
+    --muted-2: #7186a2;
+
+    --blue: #3b82f6;
+    --blue-soft: rgba(59, 130, 246, 0.10);
+
+    --green: #22c55e;
+    --green-soft: rgba(34, 197, 94, 0.09);
+
+    --yellow: #f59e0b;
+    --yellow-soft: rgba(245, 158, 11, 0.09);
+
+    --red: #ef4444;
+    --red-soft: rgba(239, 68, 68, 0.09);
+
+    width: 100%;
+    color: var(--text);
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    font-size: 14px;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 4px 0 2px;
+}
+
+.dashboard-header-left {
+    min-width: 0;
+}
+
+.dashboard-eyebrow {
+    margin-bottom: 7px;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+
+    color: #60a5fa;
+}
+
+.dashboard-title {
+    margin: 0;
+
+    font-size: 28px;
+    line-height: 1.2;
+
+    font-weight: 750;
+    letter-spacing: -0.4px;
+
+    color: #f8fafc;
+}
+
+.dashboard-subtitle {
+    margin: 7px 0 0;
+
+    font-size: 13px;
+    line-height: 1.5;
+
+    color: var(--muted);
+}
+
+.system-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 8px 13px;
+
+    border: 1px solid rgba(34, 197, 94, 0.28);
+    border-radius: 999px;
+
+    background: rgba(34, 197, 94, 0.07);
+
+    font-size: 12px;
+    font-weight: 750;
+
+    color: #9beab1;
+
+    white-space: nowrap;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+
+    box-shadow: 0 0 9px rgba(34, 197, 94, 0.7);
+}
+
+/* =========================================================
+   KPI GRID
+========================================================= */
+
+.kpi-grid {
+    display: grid;
+
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 13px;
+}
+
+.kpi-card {
+    position: relative;
+
+    min-height: 125px;
+
+    padding: 17px 18px;
+
+    border: 1px solid var(--border);
+    border-radius: 11px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(13, 26, 45, 0.98),
+            rgba(9, 20, 35, 0.98)
+        );
+
+    overflow: hidden;
+
+    transition:
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.kpi-card:hover {
+    border-color: rgba(59, 130, 246, 0.42);
+    transform: translateY(-1px);
+}
+
+.kpi-card::after {
+    content: "";
+
+    position: absolute;
+
+    right: -38px;
+    top: -38px;
+
+    width: 90px;
+    height: 90px;
+
+    border-radius: 50%;
+
+    background: rgba(59, 130, 246, 0.035);
+}
+
+.kpi-top {
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+}
+
+.kpi-label {
+    font-size: 12px;
+    font-weight: 700;
+
+    color: #9cafc7;
+}
+
+.kpi-icon {
+    width: 31px;
+    height: 31px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: var(--blue-soft);
+
+    color: #76a9fa;
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.kpi-value {
+    position: relative;
+    z-index: 1;
+
+    margin-top: 12px;
+
+    font-size: 27px;
+    line-height: 1;
+
+    font-weight: 800;
+    letter-spacing: -0.4px;
+
+    color: #f8fafc;
+}
+
+.kpi-description {
+    position: relative;
+    z-index: 1;
+
+    margin-top: 8px;
+
+    font-size: 11px;
+    line-height: 1.4;
+
+    color: var(--muted-2);
+}
+
+.kpi-card.success .kpi-icon {
+    background: var(--green-soft);
+    color: #6ee795;
+}
+
+.kpi-card.warning .kpi-icon {
+    background: var(--yellow-soft);
+    color: #f7c76c;
+}
+
+.kpi-card.danger .kpi-icon {
+    background: var(--red-soft);
+    color: #ff8989;
+}
+
+/* =========================================================
+   SECTION HEADER
+========================================================= */
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 10px;
+}
+
+.section-title {
+    margin: 0;
+
+    font-size: 16px;
+    line-height: 1.3;
+
+    font-weight: 750;
+
+    color: #f4f7fb;
+}
+
+.section-description {
+    margin: 4px 0 0;
+
+    font-size: 12px;
+    line-height: 1.45;
+
+    color: var(--muted-2);
+}
+
+/* =========================================================
+   SECURITY OPERATIONS
+========================================================= */
+
+.actions-grid {
+    display: grid;
+
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 11px;
+}
+
+.action-card {
+    display: flex;
+    align-items: center;
+
+    min-height: 72px;
+
+    gap: 12px;
+
+    padding: 13px 14px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    background: rgba(13, 26, 45, 0.88);
+
+    color: inherit;
+    text-decoration: none;
+
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease,
+        transform 0.15s ease;
+}
+
+.action-card:hover {
+    border-color: rgba(59, 130, 246, 0.45);
+
+    background: var(--panel-hover);
+
+    transform: translateY(-1px);
+}
+
+.action-icon {
+    width: 38px;
+    height: 38px;
+
+    flex: 0 0 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: var(--blue-soft);
+
+    color: #75a8fa;
+
+    font-size: 11px;
+    font-weight: 850;
+}
+
+.action-content {
+    min-width: 0;
+}
+
+.action-title {
+    font-size: 13px;
+    line-height: 1.3;
+
+    font-weight: 750;
+
+    color: #f1f5f9;
+}
+
+.action-text {
+    margin-top: 4px;
+
+    font-size: 11px;
+    line-height: 1.4;
+
+    color: var(--muted-2);
+}
+
+/* =========================================================
+   MAIN WORKSPACE
+========================================================= */
+
+.workspace-grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.35fr)
+        minmax(320px, 0.65fr);
+
+    gap: 13px;
+}
+
+.dashboard-panel {
+    min-width: 0;
+
+    border: 1px solid var(--border);
+    border-radius: 11px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(13, 26, 45, 0.98),
+            rgba(9, 20, 35, 0.98)
+        );
+
+    overflow: hidden;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    min-height: 64px;
+
+    padding: 15px 17px;
+
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.panel-header-left {
+    min-width: 0;
+}
+
+.panel-title {
+    margin: 0;
+
+    font-size: 15px;
+    line-height: 1.3;
+
+    font-weight: 750;
+
+    color: #f4f7fb;
+}
+
+.panel-subtitle {
+    margin: 4px 0 0;
+
+    font-size: 11px;
+    line-height: 1.4;
+
+    color: var(--muted-2);
+}
+
+.panel-body {
+    padding: 15px 17px;
+}
+
+/* =========================================================
+   MONITOR PANEL
+========================================================= */
+
+.monitor-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 6px 9px;
+
+    border-radius: 999px;
+
+    background: rgba(34, 197, 94, 0.07);
+
+    border: 1px solid rgba(34, 197, 94, 0.22);
+
+    color: #9beab1;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+.monitor-status-dot {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+}
+
+.monitor-info {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 9px;
+}
+
+.info-box {
+    min-height: 66px;
+
+    padding: 12px;
+
+    border: 1px solid rgba(148, 163, 184, 0.09);
+
+    border-radius: 8px;
+
+    background: rgba(7, 17, 31, 0.46);
+}
+
+.info-label {
+    font-size: 10px;
+
+    font-weight: 800;
+
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+
+    color: #7085a1;
+}
+
+.info-value {
+    margin-top: 6px;
+
+    font-size: 13px;
+    line-height: 1.3;
+
+    font-weight: 700;
+
+    color: #e7eef7;
+
+    word-break: break-word;
+}
+
+.info-value.online {
+    color: #8fe5a6;
+}
+
+/* =========================================================
+   LATEST ANALYSIS
+========================================================= */
+
+.analysis-box {
+    display: flex;
+    flex-direction: column;
+
+    gap: 9px;
+}
+
+.analysis-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    min-height: 98px;
+
+    padding: 14px;
+
+    border: 1px solid rgba(148, 163, 184, 0.09);
+
+    border-radius: 8px;
+
+    background: rgba(7, 17, 31, 0.46);
+}
+
+.analysis-left {
+    min-width: 0;
+}
+
+.analysis-name {
+    font-size: 13px;
+    line-height: 1.4;
+
+    font-weight: 700;
+
+    color: #edf3fa;
+
+    overflow-wrap: anywhere;
+}
+
+.analysis-date {
+    margin-top: 5px;
+
+    font-size: 10px;
+
+    color: var(--muted-2);
+}
+
+.analysis-threats {
+    flex: 0 0 auto;
+
+    text-align: right;
+}
+
+.analysis-threat-count {
+    font-size: 24px;
+    line-height: 1;
+
+    font-weight: 800;
+
+    color: #fca5a5;
+}
+
+.analysis-threat-label {
+    margin-top: 4px;
+
+    font-size: 10px;
+
+    color: var(--muted-2);
+}
+
+/* =========================================================
+   SECONDARY WORKSPACE
+========================================================= */
+
+.secondary-grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 0.9fr)
+        minmax(0, 1.1fr);
+
+    gap: 13px;
+}
+
+/* =========================================================
+   QUICK ACCESS
+========================================================= */
+
+.quick-list {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 8px;
+}
+
+.quick-item {
+    display: flex;
+    align-items: center;
+
+    min-width: 0;
+
+    gap: 10px;
+
+    padding: 10px 11px;
+
+    border: 1px solid rgba(148, 163, 184, 0.09);
+
+    border-radius: 8px;
+
+    color: inherit;
+    text-decoration: none;
+
+    background: rgba(7, 17, 31, 0.40);
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.quick-item:hover {
+    background: rgba(17, 31, 53, 0.85);
+
+    border-color: rgba(59, 130, 246, 0.32);
+}
+
+.quick-icon {
+    width: 31px;
+    height: 31px;
+
+    flex: 0 0 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 7px;
+
+    background: rgba(59, 130, 246, 0.09);
+
+    color: #7baeff;
+
+    font-size: 9px;
+    font-weight: 850;
+}
+
+.quick-content {
+    min-width: 0;
+}
+
+.quick-title {
+    font-size: 11px;
+
+    font-weight: 700;
+
+    color: #eaf1f8;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.quick-description {
+    margin-top: 3px;
+
+    font-size: 9px;
+    line-height: 1.35;
+
+    color: var(--muted-2);
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.quick-arrow {
+    margin-left: auto;
+
+    color: #627995;
+
+    font-size: 13px;
+}
+
+/* =========================================================
+   RECENT ALERTS
+========================================================= */
+
+.alert-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+.alert-item {
+    display: grid;
+
+    grid-template-columns:
+        7px
+        minmax(0, 1fr)
+        auto;
+
+    align-items: center;
+
+    gap: 10px;
+
+    min-height: 49px;
+
+    padding: 9px 10px;
+
+    border: 1px solid rgba(148, 163, 184, 0.09);
+
+    border-radius: 8px;
+
+    background: rgba(7, 17, 31, 0.40);
+}
+
+.alert-indicator {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: #ef4444;
+
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.alert-content {
+    min-width: 0;
+}
+
+.alert-title {
+    font-size: 11px;
+
+    line-height: 1.35;
+
+    font-weight: 700;
+
+    color: #eaf1f8;
+
+    overflow-wrap: anywhere;
+}
+
+.alert-time {
+    margin-top: 3px;
+
+    font-size: 9px;
+
+    color: var(--muted-2);
+}
+
+.alert-badge {
+    padding: 4px 7px;
+
+    border-radius: 5px;
+
+    background: rgba(239, 68, 68, 0.08);
+
+    border: 1px solid rgba(239, 68, 68, 0.18);
+
+    color: #ff9b9b;
+
+    font-size: 8px;
+
+    font-weight: 850;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.4px;
+
+    white-space: nowrap;
+}
+
+.no-alerts {
+    padding: 25px 10px;
+
+    text-align: center;
+
+    color: var(--muted-2);
+
+    font-size: 11px;
+}
+
+/* =========================================================
+   SYSTEM STATUS
+========================================================= */
+
+.system-bar {
+    display: grid;
+
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    border: 1px solid var(--border);
+
+    border-radius: 9px;
+
+    background: rgba(13, 26, 45, 0.82);
+
+    overflow: hidden;
+}
+
+.system-item {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    min-height: 48px;
+
+    padding: 10px 13px;
+
+    border-right: 1px solid var(--border-soft);
+}
+
+.system-item:last-child {
+    border-right: none;
+}
+
+.system-indicator {
+    width: 6px;
+    height: 6px;
+
+    flex: 0 0 auto;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.55);
+}
+
+.system-label {
+    font-size: 10px;
+
+    color: var(--muted-2);
+
+    white-space: nowrap;
+}
+
+.system-value {
+    margin-left: auto;
+
+    font-size: 10px;
+
+    font-weight: 750;
+
+    color: #dce8f6;
+
+    white-space: nowrap;
+}
+
+/* =========================================================
+   VIEW ALL
+========================================================= */
+
+.view-all {
+    color: #7eafff;
+
+    text-decoration: none;
+
+    font-size: 10px;
+
+    font-weight: 750;
+}
+
+.view-all:hover {
+    color: #a7c8ff;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1200px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .actions-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .workspace-grid,
+    .secondary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .system-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .system-item:nth-child(2) {
+        border-right: none;
+    }
+
+    .system-item:nth-child(-n+2) {
+        border-bottom: 1px solid var(--border-soft);
+    }
+}
+
+@media (max-width: 768px) {
+    .cyber-dashboard {
+        gap: 16px;
+    }
+
+    .dashboard-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .dashboard-title {
+        font-size: 24px;
+    }
+
+    .dashboard-subtitle {
+        font-size: 12px;
+    }
+
+    .kpi-grid,
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .monitor-info {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-list {
+        grid-template-columns: 1fr;
+    }
+
+    .system-bar {
+        grid-template-columns: 1fr;
+    }
+
+    .system-item {
+        border-right: none;
+        border-bottom: 1px solid var(--border-soft);
+    }
+
+    .system-item:last-child {
+        border-bottom: none;
+    }
+
+    .analysis-main {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .analysis-threats {
+        text-align: left;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-title {
+        font-size: 22px;
+    }
+
+    .kpi-card {
+        min-height: 115px;
+
+        padding: 15px;
+    }
+
+    .kpi-value {
+        font-size: 25px;
+    }
+
+    .panel-header {
+        padding: 13px 14px;
+    }
+
+    .panel-body {
+        padding: 13px 14px;
+    }
+
+    .action-card {
+        min-height: 68px;
+    }
+}
+</style>
+
+
+<div class="cyber-dashboard">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <div class="dashboard-header">
+
+        <div class="dashboard-header-left">
+
+            <div class="dashboard-eyebrow">
+                Security Operations Center
+            </div>
+
+            <h1 class="dashboard-title">
+                Security Dashboard
+            </h1>
+
+            <p class="dashboard-subtitle">
+                Welcome back, {{ current_user.username }}.
+                Monitor network activity, analyze threats, and manage security events.
+            </p>
+
+        </div>
+
+        <div class="system-status">
+            <span class="status-dot"></span>
+            System Online
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         KPI OVERVIEW
+    ====================================================== -->
+
+    <div class="kpi-grid">
+
+        <!-- Total Analyses -->
+
+        <div class="kpi-card">
+
+            <div class="kpi-top">
+
+                <div class="kpi-label">
+                    Total Analyses
+                </div>
+
+                <div class="kpi-icon">
+                    A
+                </div>
+
+            </div>
+
+            <div class="kpi-value">
+                {{ total_analyses }}
+            </div>
+
+            <div class="kpi-description">
+                Network datasets analyzed
+            </div>
+
+        </div>
+
+
+        <!-- Threats Detected -->
+
+        <div class="kpi-card danger">
+
+            <div class="kpi-top">
+
+                <div class="kpi-label">
+                    Threats Detected
+                </div>
+
+                <div class="kpi-icon">
+                    !
+                </div>
+
+            </div>
+
+            <div class="kpi-value">
+                {{ total_threats }}
+            </div>
+
+            <div class="kpi-description">
+                Malicious activities identified
+            </div>
+
+        </div>
+
+
+        <!-- Critical Alerts -->
+
+        <div class="kpi-card warning">
+
+            <div class="kpi-top">
+
+                <div class="kpi-label">
+                    Critical Alerts
+                </div>
+
+                <div class="kpi-icon">
+                    !
+                </div>
+
+            </div>
+
+            <div class="kpi-value">
+                {{ critical_alerts }}
+            </div>
+
+            <div class="kpi-description">
+                High-priority security events
+            </div>
+
+        </div>
+
+
+        <!-- ML Detection Engine -->
+
+        <div class="kpi-card success">
+
+            <div class="kpi-top">
+
+                <div class="kpi-label">
+                    ML Detection Engine
+                </div>
+
+                <div class="kpi-icon">
+                    AI
+                </div>
+
+            </div>
+
+            <div class="kpi-value" style="font-size: 23px;">
+
+                {% if model_ready %}
+                    READY
+                {% else %}
+                    OFFLINE
+                {% endif %}
+
+            </div>
+
+            <div class="kpi-description">
+                CyberShield threat detection model
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SECURITY OPERATIONS
+    ====================================================== -->
+
+    <div>
+
+        <div class="section-header">
+
+            <div>
+
+                <h2 class="section-title">
+                    Security Operations
+                </h2>
+
+                <p class="section-description">
+                    Access the main CyberShield security tools.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="actions-grid">
+
+            <!-- Live Monitor -->
+
+            <a href="{{ url_for('monitor') }}" class="action-card">
+
+                <div class="action-icon">
+                    LIVE
+                </div>
+
+                <div class="action-content">
+
+                    <div class="action-title">
+                        Live Network Monitor
+                    </div>
+
+                    <div class="action-text">
+                        Capture and monitor live network traffic.
+                    </div>
+
+                </div>
+
+            </a>
+
+
+            <!-- Threat Analysis -->
+
+            <a href="{{ url_for('analysis') }}" class="action-card">
+
+                <div class="action-icon">
+                    AI
+                </div>
+
+                <div class="action-content">
+
+                    <div class="action-title">
+                        Threat Analysis
+                    </div>
+
+                    <div class="action-text">
+                        Analyze network datasets using the ML engine.
+                    </div>
+
+                </div>
+
+            </a>
+
+
+            <!-- Alerts -->
+
+            <a href="{{ url_for('alerts') }}" class="action-card">
+
+                <div class="action-icon">
+                    !
+                </div>
+
+                <div class="action-content">
+
+                    <div class="action-title">
+                        Security Alerts
+                    </div>
+
+                    <div class="action-text">
+                        Review and manage detected threats.
+                    </div>
+
+                </div>
+
+            </a>
+
+
+            <!-- Reports -->
+
+            <a href="{{ url_for('reports') }}" class="action-card">
+
+                <div class="action-icon">
+                    PDF
+                </div>
+
+                <div class="action-content">
+
+                    <div class="action-title">
+                        Reports
+                    </div>
+
+                    <div class="action-text">
+                        View and generate security reports.
+                    </div>
+
+                </div>
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         PRIMARY WORKSPACE
+    ====================================================== -->
+
+    <div class="workspace-grid">
+
+        <!-- LIVE NETWORK MONITOR -->
+
+        <div class="dashboard-panel">
+
+            <div class="panel-header">
+
+                <div class="panel-header-left">
+
+                    <h2 class="panel-title">
+                        Live Network Monitor
+                    </h2>
+
+                    <p class="panel-subtitle">
+                        Real-time network traffic monitoring status.
+                    </p>
+
+                </div>
+
+                <div class="monitor-status">
+
+                    <span class="monitor-status-dot"></span>
+
+                    Monitor Available
+
+                </div>
+
+            </div>
+
+
+            <div class="panel-body">
+
+                <div class="monitor-info">
+
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Monitoring
+                        </div>
+
+                        <div class="info-value online">
+                            Ready
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Packet Capture
+                        </div>
+
+                        <div class="info-value online">
+                            Available
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Detection Engine
+                        </div>
+
+                        <div class="info-value {% if model_ready %}online{% endif %}">
+
+                            {% if model_ready %}
+                                Active
+                            {% else %}
+                                Offline
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Interface
+                        </div>
+
+                        <div class="info-value">
+                            Network Interface
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- LATEST ANALYSIS -->
+
+        <div class="dashboard-panel">
+
+            <div class="panel-header">
+
+                <div class="panel-header-left">
+
+                    <h2 class="panel-title">
+                        Latest Analysis
+                    </h2>
+
+                    <p class="panel-subtitle">
+                        Most recent dataset analysis.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel-body">
+
+                {% if latest_run %}
+
+                <div class="analysis-box">
+
+                    <div class="analysis-main">
+
+                        <div class="analysis-left">
+
+                            <div class="analysis-name">
+                                {{ latest_run.filename }}
+                            </div>
+
+                            <div class="analysis-date">
+                                {{ latest_run.created_at | datetime12 }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="analysis-threats">
+
+                            <div class="analysis-threat-count">
+                                {{ latest_run.threats_detected }}
+                            </div>
+
+                            <div class="analysis-threat-label">
+                                Threats Detected
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% else %}
+
+                <div class="no-alerts">
+                    No analysis available.
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         QUICK ACCESS + RECENT SECURITY EVENTS
+    ====================================================== -->
+
+    <div class="secondary-grid">
+
+        <!-- QUICK ACCESS -->
+
+        <div class="dashboard-panel">
+
+            <div class="panel-header">
+
+                <div class="panel-header-left">
+
+                    <h2 class="panel-title">
+                        Quick Access
+                    </h2>
+
+                    <p class="panel-subtitle">
+                        Frequently used CyberShield functions.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="panel-body">
+
+                <div class="quick-list">
+
+                    <a href="{{ url_for('monitor') }}" class="quick-item">
+
+                        <div class="quick-icon">
+                            LIVE
+                        </div>
+
+                        <div class="quick-content">
+
+                            <div class="quick-title">
+                                Live Network Monitor
+                            </div>
+
+                            <div class="quick-description">
+                                Monitor network traffic in real time.
+                            </div>
+
+                        </div>
+
+                        <div class="quick-arrow">
+                            →
+                        </div>
+
+                    </a>
+
+
+                    <a href="{{ url_for('analysis') }}" class="quick-item">
+
+                        <div class="quick-icon">
+                            AI
+                        </div>
+
+                        <div class="quick-content">
+
+                            <div class="quick-title">
+                                Threat Analysis
+                            </div>
+
+                            <div class="quick-description">
+                                Run machine-learning threat analysis.
+                            </div>
+
+                        </div>
+
+                        <div class="quick-arrow">
+                            →
+                        </div>
+
+                    </a>
+
+
+                    <a href="{{ url_for('alerts') }}" class="quick-item">
+
+                        <div class="quick-icon">
+                            !
+                        </div>
+
+                        <div class="quick-content">
+
+                            <div class="quick-title">
+                                Security Alerts
+                            </div>
+
+                            <div class="quick-description">
+                                Investigate detected security events.
+                            </div>
+
+                        </div>
+
+                        <div class="quick-arrow">
+                            →
+                        </div>
+
+                    </a>
+
+
+                    <a href="{{ url_for('reports') }}" class="quick-item">
+
+                        <div class="quick-icon">
+                            R
+                        </div>
+
+                        <div class="quick-content">
+
+                            <div class="quick-title">
+                                Security Reports
+                            </div>
+
+                            <div class="quick-description">
+                                Review analysis and security reports.
+                            </div>
+
+                        </div>
+
+                        <div class="quick-arrow">
+                            →
+                        </div>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- RECENT SECURITY ALERTS -->
+
+        <div class="dashboard-panel">
+
+            <div class="panel-header">
+
+                <div class="panel-header-left">
+
+                    <h2 class="panel-title">
+                        Recent Security Events
+                    </h2>
+
+                    <p class="panel-subtitle">
+                        Latest events detected by CyberShield.
+                    </p>
+
+                </div>
+
+                <a href="{{ url_for('alerts') }}" class="view-all">
+                    View All
+                </a>
+
+            </div>
+
+
+            <div class="panel-body">
+
+                {% if recent_alerts %}
+
+                <div class="alert-list">
+
+                    {% for alert in recent_alerts %}
+
+                    <div class="alert-item">
+
+                        <div class="alert-indicator"></div>
+
+                        <div class="alert-content">
+
+                            <div class="alert-title">
+                                {{ alert.title }}
+                            </div>
+
+                            <div class="alert-time">
+                                {{ alert.created_at | datetime12 }}
+                            </div>
+
+                        </div>
+
+                        <div class="alert-badge">
+                            {{ alert.severity }}
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+                {% else %}
+
+                <div class="no-alerts">
+                    No recent security alerts.
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SYSTEM STATUS
+    ====================================================== -->
+
+    <div class="system-bar">
+
+        <div class="system-item">
+
+            <span class="system-indicator"></span>
+
+            <span class="system-label">
+                Authentication
+            </span>
+
+            <span class="system-value">
+                Operational
+            </span>
+
+        </div>
+
+
+        <div class="system-item">
+
+            <span class="system-indicator"></span>
+
+            <span class="system-label">
+                Database
+            </span>
+
+            <span class="system-value">
+                Operational
+            </span>
+
+        </div>
+
+
+        <div class="system-item">
+
+            <span class="system-indicator"></span>
+
+            <span class="system-label">
+                ML Engine
+            </span>
+
+            <span class="system-value">
+
+                {% if model_ready %}
+                    Ready
+                {% else %}
+                    Offline
+                {% endif %}
+
+            </span>
+
+        </div>
+
+
+        <div class="system-item">
+
+            <span class="system-indicator"></span>
+
+            <span class="system-label">
+                Network Monitor
+            </span>
+
+            <span class="system-value">
+                Available
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

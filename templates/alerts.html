@@ -1,0 +1,1507 @@
+{% extends "base.html" %}
+
+{% block title %}Security Alerts | CyberShield AI{% endblock %}
+
+{% block content %}
+
+<style>
+
+/* =========================================================
+   CYBERSHIELD AI — SECURITY ALERTS
+   Focused alert investigation interface
+========================================================= */
+
+.alerts-page {
+    --panel: #0d1a2d;
+    --panel-soft: #0a1628;
+    --border: #223653;
+    --border-soft: rgba(148, 163, 184, 0.10);
+
+    --text: #f1f5f9;
+    --muted: #8fa3bf;
+    --muted-2: #657b99;
+
+    --blue: #3b82f6;
+    --blue-soft: rgba(59, 130, 246, 0.10);
+
+    --green: #22c55e;
+    --green-soft: rgba(34, 197, 94, 0.08);
+
+    --yellow: #f59e0b;
+    --yellow-soft: rgba(245, 158, 11, 0.08);
+
+    --orange: #f97316;
+    --orange-soft: rgba(249, 115, 22, 0.08);
+
+    --red: #ef4444;
+    --red-soft: rgba(239, 68, 68, 0.08);
+
+    width: 100%;
+    color: var(--text);
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 20px;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.alerts-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 20px;
+    padding-top: 2px;
+}
+
+.alerts-header-left {
+    min-width: 0;
+}
+
+.alerts-eyebrow {
+    margin: 0 0 8px;
+
+    color: #60a5fa;
+
+    font-size: 12px;
+    font-weight: 800;
+
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.alerts-title {
+    margin: 0;
+
+    color: #f8fafc;
+
+    font-size: 32px;
+    line-height: 1.2;
+
+    font-weight: 750;
+
+    letter-spacing: -0.4px;
+}
+
+.alerts-subtitle {
+    margin: 9px 0 0;
+
+    max-width: 700px;
+
+    color: var(--muted);
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   ACTIVE STATUS
+========================================================= */
+
+.alerts-status {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 9px 14px;
+
+    border: 1px solid rgba(34, 197, 94, 0.24);
+
+    border-radius: 999px;
+
+    background: rgba(34, 197, 94, 0.06);
+
+    color: #86efac;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: 0.5px;
+
+    white-space: nowrap;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+}
+
+
+/* =========================================================
+   MAIN ALERT PANEL
+========================================================= */
+
+.alert-panel {
+    overflow: hidden;
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(13, 26, 45, 0.98),
+            rgba(9, 20, 35, 0.98)
+        );
+}
+
+
+/* =========================================================
+   PANEL HEADER
+========================================================= */
+
+.alert-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 18px 20px;
+
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.panel-title-group {
+    min-width: 0;
+}
+
+.panel-title {
+    margin: 0;
+
+    color: #f4f7fb;
+
+    font-size: 18px;
+    line-height: 1.3;
+
+    font-weight: 750;
+}
+
+.panel-description {
+    margin: 5px 0 0;
+
+    color: var(--muted-2);
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.alert-count {
+    color: #8ca1bd;
+
+    font-size: 11px;
+
+    font-weight: 750;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   FILTER BAR
+========================================================= */
+
+.filter-bar {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 14px 20px;
+
+    border-bottom: 1px solid var(--border-soft);
+
+    background: rgba(7, 17, 31, 0.34);
+}
+
+.search-box {
+    position: relative;
+
+    flex: 1;
+
+    min-width: 240px;
+}
+
+.search-icon {
+    position: absolute;
+
+    left: 13px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #6f85a1;
+
+    font-size: 13px;
+
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 11px 12px 11px 36px;
+
+    border: 1px solid #29405f;
+
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #091629;
+
+    color: #e2e8f0;
+
+    font-size: 13px;
+
+    transition: border-color 0.15s ease,
+                box-shadow 0.15s ease;
+}
+
+.search-input::placeholder {
+    color: #657b99;
+}
+
+.search-input:focus {
+    border-color: rgba(59, 130, 246, 0.65);
+
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+}
+
+.filter-select {
+    min-width: 135px;
+
+    padding: 11px 11px;
+
+    border: 1px solid #29405f;
+
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #091629;
+
+    color: #a9bbd3;
+
+    font-size: 13px;
+
+    cursor: pointer;
+}
+
+.filter-select:focus {
+    border-color: rgba(59, 130, 246, 0.65);
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.alert-table-header {
+    display: grid;
+
+    grid-template-columns:
+        minmax(280px, 2fr)
+        110px
+        110px
+        minmax(160px, 1fr)
+        145px
+        90px;
+
+    gap: 16px;
+
+    align-items: center;
+
+    padding: 12px 20px;
+
+    border-bottom: 1px solid var(--border-soft);
+
+    color: #7186a4;
+
+    font-size: 10px;
+
+    font-weight: 850;
+
+    letter-spacing: 0.8px;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   ALERT LIST
+========================================================= */
+
+.alert-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.alert-row {
+    display: grid;
+
+    grid-template-columns:
+        minmax(280px, 2fr)
+        110px
+        110px
+        minmax(160px, 1fr)
+        145px
+        90px;
+
+    gap: 16px;
+
+    align-items: center;
+
+    min-height: 90px;
+
+    padding: 16px 20px;
+
+    border-bottom: 1px solid rgba(148, 163, 184, 0.065);
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.alert-row:last-child {
+    border-bottom: none;
+}
+
+.alert-row:hover {
+    background: rgba(59, 130, 246, 0.035);
+}
+
+
+/* =========================================================
+   DETECTION
+========================================================= */
+
+.alert-main {
+    min-width: 0;
+}
+
+.alert-title-line {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    min-width: 0;
+}
+
+.severity-line {
+    width: 4px;
+    height: 28px;
+
+    flex: 0 0 4px;
+
+    border-radius: 5px;
+}
+
+.severity-line.critical {
+    background: #ef4444;
+}
+
+.severity-line.high {
+    background: #f97316;
+}
+
+.severity-line.medium {
+    background: #f59e0b;
+}
+
+.severity-line.low {
+    background: #3b82f6;
+}
+
+.alert-title {
+    overflow: hidden;
+
+    color: #e8eef8;
+
+    font-size: 14px;
+
+    font-weight: 750;
+
+    line-height: 1.4;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+.alert-description {
+    margin: 6px 0 0 13px;
+
+    max-width: 680px;
+
+    color: #7186a4;
+
+    font-size: 11px;
+
+    line-height: 1.5;
+
+    display: -webkit-box;
+
+    -webkit-line-clamp: 1;
+
+    -webkit-box-orient: vertical;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   LIVE TAG
+========================================================= */
+
+.live-tag {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 4px 7px;
+
+    border: 1px solid rgba(239, 68, 68, 0.20);
+
+    border-radius: 5px;
+
+    background: rgba(239, 68, 68, 0.07);
+
+    color: #fca5a5;
+
+    font-size: 9px;
+
+    font-weight: 900;
+
+    letter-spacing: 0.5px;
+}
+
+.live-dot {
+    width: 5px;
+    height: 5px;
+
+    border-radius: 50%;
+
+    background: #ef4444;
+}
+
+
+/* =========================================================
+   BADGES
+========================================================= */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 65px;
+
+    padding: 6px 8px;
+
+    border-radius: 5px;
+
+    font-size: 10px;
+
+    font-weight: 850;
+
+    letter-spacing: 0.4px;
+
+    text-transform: uppercase;
+}
+
+.badge-critical {
+    color: #fca5a5;
+
+    background: var(--red-soft);
+
+    border: 1px solid rgba(239, 68, 68, 0.20);
+}
+
+.badge-high {
+    color: #fdba74;
+
+    background: var(--orange-soft);
+
+    border: 1px solid rgba(249, 115, 22, 0.20);
+}
+
+.badge-medium {
+    color: #fcd34d;
+
+    background: var(--yellow-soft);
+
+    border: 1px solid rgba(245, 158, 11, 0.20);
+}
+
+.badge-low {
+    color: #93c5fd;
+
+    background: var(--blue-soft);
+
+    border: 1px solid rgba(59, 130, 246, 0.20);
+}
+
+.badge-open {
+    color: #fcd34d;
+
+    background: rgba(245, 158, 11, 0.07);
+
+    border: 1px solid rgba(245, 158, 11, 0.17);
+}
+
+.badge-resolved {
+    color: #86efac;
+
+    background: rgba(34, 197, 94, 0.07);
+
+    border: 1px solid rgba(34, 197, 94, 0.17);
+}
+
+
+/* =========================================================
+   SOURCE
+========================================================= */
+
+.alert-source {
+    min-width: 0;
+
+    color: #91a7c2;
+
+    font-size: 11px;
+
+    line-height: 1.45;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+.alert-source.live {
+    color: #fca5a5;
+}
+
+.alert-id {
+    margin-top: 4px;
+
+    color: #526987;
+
+    font-size: 9px;
+}
+
+
+/* =========================================================
+   TIME
+========================================================= */
+
+.alert-time {
+    color: #8ca1bd;
+
+    font-size: 11px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   ACTION
+========================================================= */
+
+.resolve-form {
+    margin: 0;
+}
+
+.resolve-button {
+    width: 100%;
+
+    padding: 8px 9px;
+
+    border: 1px solid rgba(34, 197, 94, 0.20);
+
+    border-radius: 6px;
+
+    background: rgba(34, 197, 94, 0.06);
+
+    color: #86efac;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.resolve-button:hover {
+    background: rgba(34, 197, 94, 0.14);
+
+    border-color: rgba(34, 197, 94, 0.45);
+
+    color: #bbf7d0;
+}
+
+.completed {
+    color: #6c829e;
+
+    font-size: 10px;
+
+    font-weight: 750;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty-state {
+    padding: 65px 20px;
+
+    text-align: center;
+}
+
+.empty-icon {
+    width: 46px;
+    height: 46px;
+
+    margin: 0 auto 14px;
+
+    display: grid;
+
+    place-items: center;
+
+    border-radius: 50%;
+
+    background: var(--green-soft);
+
+    color: #4ade80;
+
+    font-size: 18px;
+}
+
+.empty-state h3 {
+    margin: 0;
+
+    color: #dbeafe;
+
+    font-size: 17px;
+}
+
+.empty-state p {
+    max-width: 450px;
+
+    margin: 7px auto 0;
+
+    color: #657b99;
+
+    font-size: 12px;
+
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   NO FILTER RESULTS
+========================================================= */
+
+.no-results {
+    display: none;
+
+    padding: 55px 20px;
+
+    text-align: center;
+}
+
+.no-results-icon {
+    margin-bottom: 9px;
+
+    color: #64748b;
+
+    font-size: 26px;
+}
+
+.no-results-title {
+    color: #cbd5e1;
+
+    font-size: 14px;
+
+    font-weight: 750;
+}
+
+.no-results-text {
+    margin-top: 6px;
+
+    color: #64748b;
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1150px) {
+
+    .alert-table-header {
+        display: none;
+    }
+
+    .alert-row {
+        grid-template-columns:
+            minmax(0, 1fr)
+            95px
+            95px;
+
+        gap: 14px;
+    }
+
+    .alert-source {
+        display: none;
+    }
+
+    .alert-time {
+        text-align: right;
+    }
+
+    .alert-action {
+        grid-column: 2 / 4;
+    }
+
+    .resolve-button {
+        width: auto;
+
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+}
+
+
+@media (max-width: 800px) {
+
+    .alerts-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .alerts-status {
+        align-self: flex-start;
+    }
+
+    .filter-bar {
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        flex-basis: 100%;
+    }
+
+    .filter-select {
+        flex: 1;
+
+        min-width: 120px;
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .alerts-page {
+        gap: 16px;
+    }
+
+    .alerts-title {
+        font-size: 27px;
+    }
+
+    .alerts-subtitle {
+        font-size: 12px;
+    }
+
+    .alert-panel-header {
+        padding: 15px;
+    }
+
+    .panel-title {
+        font-size: 16px;
+    }
+
+    .panel-description {
+        font-size: 11px;
+    }
+
+    .filter-bar {
+        padding: 12px 15px;
+    }
+
+    .alert-row {
+        grid-template-columns:
+            minmax(0, 1fr)
+            85px;
+
+        padding: 14px 15px;
+    }
+
+    .alert-time {
+        display: none;
+    }
+
+    .alert-action {
+        grid-column: 1 / 3;
+    }
+
+    .alert-description {
+        max-width: 100%;
+    }
+
+    .alert-title {
+        font-size: 13px;
+    }
+
+    .alert-description {
+        font-size: 11px;
+    }
+
+    .badge {
+        font-size: 9px;
+        min-width: 60px;
+    }
+}
+
+</style>
+
+
+<div class="alerts-page">
+
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <div class="alerts-header">
+
+        <div class="alerts-header-left">
+
+            <p class="alerts-eyebrow">
+                Security Operations Center / Detection
+            </p>
+
+            <h1 class="alerts-title">
+                Security Alerts
+            </h1>
+
+            <p class="alerts-subtitle">
+                Review and resolve security events detected by CyberShield AI.
+            </p>
+
+        </div>
+
+
+        <div class="alerts-status">
+
+            <span class="status-dot"></span>
+
+            Monitoring Active
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ALERT RECORDS
+    ====================================================== -->
+
+    <section class="alert-panel">
+
+
+        <!-- PANEL HEADER -->
+
+        <div class="alert-panel-header">
+
+            <div class="panel-title-group">
+
+                <h2 class="panel-title">
+                    Detection Events
+                </h2>
+
+                <p class="panel-description">
+                    Security events requiring review or resolution.
+                </p>
+
+            </div>
+
+
+            <div class="alert-count">
+                {{ alerts|length }} RECORDS
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             SEARCH + FILTERS
+        ================================================== -->
+
+        <div class="filter-bar">
+
+            <div class="search-box">
+
+                <span class="search-icon">
+                    🔎
+                </span>
+
+                <input
+                    type="text"
+                    id="alertSearch"
+                    class="search-input"
+                    placeholder="Search detection events..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <select
+                id="severityFilter"
+                class="filter-select"
+            >
+
+                <option value="all">
+                    All Severity
+                </option>
+
+                <option value="critical">
+                    Critical
+                </option>
+
+                <option value="high">
+                    High
+                </option>
+
+                <option value="medium">
+                    Medium
+                </option>
+
+                <option value="low">
+                    Low
+                </option>
+
+            </select>
+
+
+            <select
+                id="statusFilter"
+                class="filter-select"
+            >
+
+                <option value="all">
+                    All Status
+                </option>
+
+                <option value="open">
+                    Open
+                </option>
+
+                <option value="resolved">
+                    Resolved
+                </option>
+
+            </select>
+
+
+            <select
+                id="sourceFilter"
+                class="filter-select"
+            >
+
+                <option value="all">
+                    All Sources
+                </option>
+
+                <option value="live">
+                    Live Detection
+                </option>
+
+                <option value="csv">
+                    Dataset Analysis
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- =================================================
+             ALERT TABLE
+        ================================================== -->
+
+        {% if alerts %}
+
+
+        <div class="alert-table-header">
+
+            <div>
+                Detection
+            </div>
+
+            <div>
+                Severity
+            </div>
+
+            <div>
+                Status
+            </div>
+
+            <div>
+                Source
+            </div>
+
+            <div>
+                Detected
+            </div>
+
+            <div>
+                Action
+            </div>
+
+        </div>
+
+
+        <div
+            class="alert-list"
+            id="alertList"
+        >
+
+            {% for alert in alerts %}
+
+                {% set severity = alert.severity|lower %}
+                {% set status = alert.status|lower %}
+
+                {% set is_live =
+                    alert.source == "Live network ML detection"
+                %}
+
+
+                <article
+                    class="alert-row"
+                    data-severity="{{ severity }}"
+                    data-status="{{ status }}"
+                    data-source="{{ 'live' if is_live else 'csv' }}"
+                    data-search="
+                        {{ alert.title|lower }}
+                        {{ (alert.description or '')|lower }}
+                        {{ (alert.source or '')|lower }}
+                        {{ alert.id }}
+                    "
+                >
+
+
+                    <!-- =====================================
+                         DETECTION
+                    ====================================== -->
+
+                    <div class="alert-main">
+
+                        <div class="alert-title-line">
+
+                            <span
+                                class="severity-line {{ severity }}"
+                            ></span>
+
+
+                            <span class="alert-title">
+                                {{ alert.title }}
+                            </span>
+
+
+                            {% if is_live %}
+
+                            <span class="live-tag">
+
+                                <span class="live-dot"></span>
+
+                                LIVE
+
+                            </span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="alert-description">
+
+                            {{ alert.description or
+                               "No additional description available." }}
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         SEVERITY
+                    ====================================== -->
+
+                    <div>
+
+                        <span
+                            class="badge badge-{{ severity }}"
+                        >
+                            {{ severity }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         STATUS
+                    ====================================== -->
+
+                    <div>
+
+                        {% if status == "open" %}
+
+                        <span class="badge badge-open">
+                            OPEN
+                        </span>
+
+                        {% else %}
+
+                        <span class="badge badge-resolved">
+                            RESOLVED
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- =====================================
+                         SOURCE
+                    ====================================== -->
+
+                    <div>
+
+                        <div
+                            class="alert-source {{ 'live' if is_live else '' }}"
+                        >
+
+                            {% if is_live %}
+
+                                Live network ML detection
+
+                            {% else %}
+
+                                {{ alert.source or "Dataset analysis" }}
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="alert-id">
+                            Alert #{{ alert.id }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         DETECTION TIME
+                    ====================================== -->
+
+                    <div class="alert-time">
+
+                        {{ alert.created_at|datetime12 }}
+
+                    </div>
+
+
+                    <!-- =====================================
+                         ACTION
+                    ====================================== -->
+
+                    <div class="alert-action">
+
+                        {% if status == "open" %}
+
+                        <form
+                            class="resolve-form"
+                            method="POST"
+                            action="{{ url_for(
+                                'resolve_alert',
+                                alert_id=alert.id
+                            ) }}"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="csrf_token"
+                                value="{{ csrf_token() }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="resolve-button"
+                            >
+                                Resolve
+                            </button>
+
+                        </form>
+
+                        {% else %}
+
+                        <span class="completed">
+                            COMPLETED
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                </article>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- ================================================
+             NO SEARCH/FILTER RESULTS
+        ================================================= -->
+
+        <div
+            id="noFilterResults"
+            class="no-results"
+        >
+
+            <div class="no-results-icon">
+                ◌
+            </div>
+
+            <div class="no-results-title">
+                No matching alerts
+            </div>
+
+            <div class="no-results-text">
+                Try changing your search or filter selection.
+            </div>
+
+        </div>
+
+
+        {% else %}
+
+
+        <!-- ================================================
+             EMPTY DATABASE
+        ================================================= -->
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                ✓
+            </div>
+
+
+            <h3>
+                No Security Alerts
+            </h3>
+
+
+            <p>
+                There are currently no recorded security events.
+                Alerts generated from dataset analysis or live
+                network monitoring will appear here.
+            </p>
+
+        </div>
+
+
+        {% endif %}
+
+
+    </section>
+
+
+</div>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+
+    const searchInput =
+        document.getElementById("alertSearch");
+
+
+    const severityFilter =
+        document.getElementById("severityFilter");
+
+
+    const statusFilter =
+        document.getElementById("statusFilter");
+
+
+    const sourceFilter =
+        document.getElementById("sourceFilter");
+
+
+    const rows =
+        Array.from(
+            document.querySelectorAll(".alert-row")
+        );
+
+
+    const noResults =
+        document.getElementById("noFilterResults");
+
+
+    function filterAlerts() {
+
+        const search =
+            (searchInput?.value || "")
+                .trim()
+                .toLowerCase();
+
+
+        const severity =
+            severityFilter?.value || "all";
+
+
+        const status =
+            statusFilter?.value || "all";
+
+
+        const source =
+            sourceFilter?.value || "all";
+
+
+        let visibleCount = 0;
+
+
+        rows.forEach(function (row) {
+
+            const rowSearch =
+                row.dataset.search || "";
+
+
+            const rowSeverity =
+                row.dataset.severity || "";
+
+
+            const rowStatus =
+                row.dataset.status || "";
+
+
+            const rowSource =
+                row.dataset.source || "";
+
+
+            const matchesSearch =
+                !search ||
+                rowSearch.includes(search);
+
+
+            const matchesSeverity =
+                severity === "all" ||
+                rowSeverity === severity;
+
+
+            const matchesStatus =
+                status === "all" ||
+                rowStatus === status;
+
+
+            const matchesSource =
+                source === "all" ||
+                rowSource === source;
+
+
+            const visible =
+                matchesSearch &&
+                matchesSeverity &&
+                matchesStatus &&
+                matchesSource;
+
+
+            row.style.display =
+                visible ? "grid" : "none";
+
+
+            if (visible) {
+                visibleCount++;
+            }
+
+        });
+
+
+        if (noResults) {
+
+            noResults.style.display =
+                visibleCount === 0
+                    ? "block"
+                    : "none";
+
+        }
+
+    }
+
+
+    searchInput?.addEventListener(
+        "input",
+        filterAlerts
+    );
+
+
+    severityFilter?.addEventListener(
+        "change",
+        filterAlerts
+    );
+
+
+    statusFilter?.addEventListener(
+        "change",
+        filterAlerts
+    );
+
+
+    sourceFilter?.addEventListener(
+        "change",
+        filterAlerts
+    );
+
+
+});
+
+</script>
+
+{% endblock %}
