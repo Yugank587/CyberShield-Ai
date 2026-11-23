@@ -1,271 +1,111 @@
 # 🛡️ CyberShield AI
 
-## AI-Based Cybersecurity Threat Detection and Monitoring System
+**AI-Based Cybersecurity Threat Detection and Monitoring System**
 
-CyberShield AI is an AI-powered cybersecurity threat detection and monitoring platform developed as a **BCA Final-Year Project**. The system combines **machine learning, network traffic analysis, dataset-based threat detection, and live packet monitoring** to identify potential cybersecurity threats and present them through a centralized web-based security interface.
+CyberShield AI is a web-based cybersecurity platform developed as a **BCA Final-Year Project**. It combines **Machine Learning, network traffic analysis, dataset-based threat detection, and live packet monitoring** to identify suspicious and malicious network activity.
 
-The project is designed to provide a simplified **Security Operations Center (SOC)-style environment** where users can analyze network traffic, monitor live network activity, investigate detected threats, manage security alerts, and generate security reports.
+## 🚀 Key Features
 
----
+- 🔐 User registration, login and secure authentication
+- 🤖 AI/ML-based network threat detection
+- 📊 CIC-IDS2017 dataset analysis
+- 🌐 Live network packet monitoring using Scapy
+- 🚨 Automated security alerts
+- ⚠️ Threat severity and risk assessment
+- 📈 Security dashboard and analytics
+- 📄 Security reports
+- 🗄️ SQLite database for users, analyses and alerts
+- 🛡️ CSRF protection and password hashing
 
-## 📌 Project Overview
+## 🧠 Machine Learning
 
-Modern computer networks generate large volumes of traffic, making manual identification of malicious activity difficult and time-consuming. CyberShield AI addresses this problem by applying machine learning techniques to network traffic data and integrating the detection pipeline with a web-based monitoring system.
+CyberShield AI uses a trained model compatible with **77 CIC-IDS2017 network traffic features**.
 
-The system supports two primary detection approaches:
+**Detection flow:**
 
-- **Dataset-Based Threat Detection** using network traffic datasets such as CIC-IDS2017.
-- **Live Network Monitoring** using Scapy and Npcap to capture network packets and process network activity for threat detection.
+`Network Traffic → Flow Features → ML Model → BENIGN / ATTACK → Severity → Alert`
 
-Detected activity is classified by the machine learning system as:
-
-- `BENIGN`
-- `ATTACK`
-
-Attack events can then be converted into security alerts with severity levels and stored in the application's database for investigation and management.
-
----
-
-# 🎯 Objectives
-
-The main objectives of CyberShield AI are:
-
-- Detect malicious network activity using machine learning.
-- Analyze cybersecurity network traffic datasets.
-- Monitor network traffic in real time.
-- Integrate packet capture with machine-learning-based detection.
-- Identify potential attacks and generate security alerts.
-- Classify detected events according to severity.
-- Maintain a history of security analyses.
-- Provide a centralized cybersecurity monitoring dashboard.
-- Allow users to investigate and resolve detected alerts.
-- Generate security reports from collected analysis data.
-- Provide a foundation for future real-time threat intelligence and SOC capabilities.
-
----
-
-# 🏗️ System Architecture
-
-The overall CyberShield AI architecture follows this workflow:
+The trained model is stored in:
 
 ```text
-                         CYBERSHIELD AI
-                              │
-                ┌─────────────┴─────────────┐
-                │                           │
-        Dataset Analysis              Live Monitoring
-                │                           │
-        CSV / Network Dataset             Scapy
-                │                           │
-                └─────────────┬─────────────┘
-                              │
-                       Data Processing
-                              │
-                              ▼
-                    Feature Extraction
-                              │
-                              ▼
-                     77 ML Features
-                              │
-                              ▼
-                  Machine Learning Model
-                              │
-                     ┌────────┴────────┐
-                     │                 │
-                  BENIGN             ATTACK
-                     │                 │
-                     │                 ▼
-                     │          Severity / Risk
-                     │                 │
-                     └────────┬────────┘
-                              ▼
-                       Security Alert
-                              │
-              ┌───────────────┼───────────────┐
-              │               │               │
-          Dashboard         Alerts          Reports
+models/cybershield_model.joblib
 ```
 
----
+## 🌐 Live Monitoring
 
-# 🚀 Key Features
+Live monitoring uses:
 
-## 1. User Authentication
+- **Scapy** for packet capture
+- **Npcap** for Windows packet access
+- Flow aggregation
+- ML-based traffic classification
+- Automated alert generation
 
-CyberShield AI includes a secure authentication system using Flask-Login.
+Raw packets are **not directly passed** to the CIC-IDS2017 model. They are first converted into the required flow-level features.
 
-Features include:
+## 🛠️ Technology Stack
 
-- User registration
-- User login
-- User logout
-- Protected application routes
-- Password hashing
-- User-specific analysis and alert records
-- CSRF protection
+| Technology | Purpose |
+|---|---|
+| Python | Backend & ML |
+| Flask | Web framework |
+| Flask-SQLAlchemy | Database |
+| Flask-Login | Authentication |
+| Scapy | Network monitoring |
+| Scikit-learn | Machine Learning |
+| Pandas / NumPy | Data processing |
+| SQLite | Database |
+| HTML / CSS / JavaScript | Frontend |
+| Npcap | Packet capture |
 
----
-
-## 2. AI-Based Threat Detection
-
-The core detection engine uses a trained machine learning model to classify network traffic.
-
-The current model supports:
+## 📁 Project Structure
 
 ```text
-BENIGN
-ATTACK
+CyberShield-AI/
+├── app.py
+├── extensions.py
+├── requirements.txt
+├── models/
+│   └── cybershield_model.joblib
+├── templates/
+├── static/
+├── dataset/
+└── README.md
 ```
 
-The trained model is stored using Joblib and uses **77 CIC-IDS2017-compatible features**.
+## ▶️ Installation
 
-The model package contains:
+```bash
+git clone https://github.com/your-username/cybershield-ai.git
+cd cybershield-ai
 
-```text
-model
-feature_columns
-target_mapping
+python -m venv venv
+venv\Scripts\activate
+
+pip install -r requirements.txt
 ```
 
-This allows the application to maintain consistency between the feature-processing pipeline and the trained model.
+Install **Npcap** on Windows for live packet monitoring.
 
----
+Then start the application:
 
-# 🤖 Machine Learning Pipeline
-
-The ML detection pipeline follows:
-
-```text
-Network Traffic
-      │
-      ▼
-Data Preprocessing
-      │
-      ▼
-Feature Selection
-      │
-      ▼
-77 CIC-IDS2017 Features
-      │
-      ▼
-Trained ML Model
-      │
-      ▼
-Prediction
-      │
-      ├── BENIGN
-      │
-      └── ATTACK
-              │
-              ▼
-       Threat Classification
-              │
-              ▼
-         Security Alert
+```bash
+python app.py
 ```
 
-The system is designed to use the same feature structure expected by the trained model rather than sending arbitrary raw packet data directly to the classifier.
+Open the Flask application in your browser.
 
----
+## 🎓 Project Purpose
 
-# 📊 CIC-IDS2017 Dataset
+CyberShield AI demonstrates how **Artificial Intelligence and Network Security** can be combined to build a practical cybersecurity monitoring system capable of detecting and managing potential network threats.
 
-CyberShield AI uses the **CIC-IDS2017 dataset** as a major source of cybersecurity network traffic data.
+## 🔮 Future Enhancements
 
-The dataset contains both benign network activity and various types of malicious traffic.
-
-The dataset is used for:
-
-- Machine learning development
-- Model evaluation
-- Threat classification
-- Feature analysis
-- Network traffic analysis
-
-The application supports processing network traffic CSV files through its analysis pipeline.
-
----
-
-# 📁 Dataset Analysis
-
-Users can upload supported CSV network traffic datasets.
-
-The analysis workflow is:
-
-```text
-CSV Dataset
-    │
-    ▼
-Upload
-    │
-    ▼
-Validation
-    │
-    ▼
-Data Processing
-    │
-    ▼
-Feature Extraction
-    │
-    ▼
-Machine Learning Prediction
-    │
-    ▼
-BENIGN / ATTACK
-    │
-    ▼
-Threat Statistics
-    │
-    ▼
-Analysis Record
-```
-
-The system records information such as:
-
-- Dataset filename
-- Number of records
-- Number of detected threats
-- Analysis status
-- Analysis timestamp
-- Associated user
-
----
-
-# 🌐 Live Network Monitoring
-
-CyberShield AI includes a live network monitoring component using **Scapy** and **Npcap**.
-
-The monitor captures network traffic from an available network interface and collects packet-level metadata.
-
-The intended processing architecture is:
-
-```text
-Network Interface
-       │
-       ▼
-Scapy Packet Capture
-       │
-       ▼
-Packet Metadata
-       │
-       ▼
-Flow Aggregation
-       │
-       ▼
-Feature Generation
-       │
-       ▼
-77 CIC-IDS2017-Compatible Features
-       │
-       ▼
-Machine Learning Model
-       │
-       ▼
-BENIGN / ATTACK
-       │
-       ▼
-Risk / Severity
-       │
-       ▼
-CyberShield Alert
-```
+- Advanced threat intelligence
+- Improved real-time ML detection
+- Automated incident response
+- Advanced network analytics
+- Audit logging
+- User profile and system settings
+- Dark/Light theme
+- Advanced security reports
