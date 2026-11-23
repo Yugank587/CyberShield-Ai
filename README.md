@@ -69,31 +69,56 @@ CyberShield-AI/
 │   └── cybershield_model.joblib
 ├── templates/
 ├── static/
-├── dataset/
+├── datasets/
 └── README.md
 ```
 
-## ▶️ Installation
+## ▶️ Run locally (Windows)
 
-```bash
-git clone https://github.com/your-username/cybershield-ai.git
-cd cybershield-ai
+1. Install **Python 3.11 or later** and Git. Clone the repository (you must have access to this private repository):
 
-python -m venv venv
-venv\Scripts\activate
+   ```powershell
+   git clone https://github.com/Yugank587/Cyber-shield-ai.git
+   cd Cyber-shield-ai
+   ```
 
-pip install -r requirements.txt
-```
+2. Create a virtual environment and install the dependencies:
 
-Install **Npcap** on Windows for live packet monitoring.
+   ```powershell
+   py -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   python -m pip install -r requirements.txt
+   ```
 
-Then start the application:
+   If PowerShell blocks activation, use the virtual environment's Python directly:
 
-```bash
-python app.py
-```
+   ```powershell
+   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+   ```
 
-Open the Flask application in your browser.
+3. Create your local settings file:
+
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+   For anything beyond local testing, replace `SECRET_KEY` in `.env` with a random value. You can generate one with:
+
+   ```powershell
+   python -c "import secrets; print(secrets.token_hex(32))"
+   ```
+
+4. Start the app:
+
+   ```powershell
+   python app.py
+   ```
+
+   If you skipped activation, run `.\.venv\Scripts\python.exe app.py` instead.
+
+5. Open **http://127.0.0.1:5000** in your browser and register an account.
+
+The app creates its local SQLite database automatically. The trained model is included. For live packet monitoring on Windows, install **Npcap** and run the app with the permissions required to capture traffic. The CIC-IDS2017 CSV files are not included; add them to `datasets/` if you want to train the model or use the dataset utility scripts.
 
 ## 🎓 Project Purpose
 
