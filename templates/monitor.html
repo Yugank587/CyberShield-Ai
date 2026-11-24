@@ -185,6 +185,21 @@
     font-weight: 850;
 }
 
+.monitor-interface-select {
+    width: 100%;
+    margin-top: 11px;
+    padding: 8px 10px;
+    border: 1px solid #334766;
+    border-radius: 7px;
+    background: #0b1425;
+    color: #f8fafc;
+    font-size: 11px;
+}
+
+.monitor-interface-select:disabled {
+    opacity: .7;
+}
+
 .monitor-stat-sub {
     margin-top: 5px;
     color: #64748b;
@@ -623,15 +638,27 @@
                 Interface
             </div>
 
-            <div
-                class="monitor-stat-value"
-                id="interfaceValue"
+            <select
+                class="monitor-interface-select"
+                id="interfaceSelect"
+                {% if monitor.running or not interfaces %}disabled{% endif %}
             >
-                —
-            </div>
+                {% if interfaces %}
+                    {% for interface in interfaces %}
+                    <option
+                        value="{{ interface.value }}"
+                        {% if interface.value == monitor.interface or (monitor.interface == "Not selected" and interface.value == default_interface) %}selected{% endif %}
+                    >
+                        {{ interface.label }}
+                    </option>
+                    {% endfor %}
+                {% else %}
+                    <option value="">No capture interfaces found</option>
+                {% endif %}
+            </select>
 
             <div class="monitor-stat-sub">
-                Network interface
+                Choose the adapter carrying the traffic to monitor
             </div>
 
         </div>
@@ -1105,6 +1132,9 @@ function updateMonitorUI(monitor) {
     const stopButton =
         document.getElementById("stopButton");
 
+    const interfaceSelect =
+        document.getElementById("interfaceSelect");
+
 
     /* STATUS */
 
@@ -1131,6 +1161,9 @@ function updateMonitorUI(monitor) {
 
     stopButton.disabled =
         !running;
+
+    interfaceSelect.disabled =
+        running || interfaceSelect.options.length === 0;
 
 
     /* CONTROL MESSAGE */
@@ -1174,11 +1207,13 @@ function updateMonitorUI(monitor) {
 
     /* INTERFACE */
 
-    document.getElementById(
-        "interfaceValue"
-    ).textContent =
-        monitor.interface ||
-        "—";
+    if (
+        monitor.interface &&
+        monitor.interface !== "Not selected"
+    ) {
+        interfaceSelect.value =
+            monitor.interface;
+    }
 
 
     /* FLOWS OBSERVED */
@@ -1423,6 +1458,19 @@ async function sendMonitorAction(url) {
     startButton.disabled = true;
     stopButton.disabled = true;
 
+    const isStarting =
+        url === START_MONITOR_URL;
+
+    const headers = {
+        "X-CSRFToken": csrfToken,
+        "X-Requested-With": "XMLHttpRequest"
+    };
+
+    if (isStarting) {
+        headers["Content-Type"] =
+            "application/json";
+    }
+
 
     try {
 
@@ -1432,13 +1480,14 @@ async function sendMonitorAction(url) {
                 {
                     method: "POST",
 
-                    headers: {
-                        "X-CSRFToken":
-                            csrfToken,
-
-                        "X-Requested-With":
-                            "XMLHttpRequest"
-                    }
+                    headers: headers,
+                    body: isStarting
+                        ? JSON.stringify({
+                            interface: document.getElementById(
+                                "interfaceSelect"
+                            ).value
+                        })
+                        : undefined
                 }
             );
 

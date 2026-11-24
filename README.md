@@ -118,7 +118,7 @@ CyberShield-AI/
 
 5. Open **http://127.0.0.1:5000** in your browser and register an account.
 
-The app creates its local SQLite database automatically. The trained model is included. For live packet monitoring on Windows, install **Npcap** and run the app with the permissions required to capture traffic. The CIC-IDS2017 CSV files are not included; add them to `datasets/` if you want to train the model or use the dataset utility scripts.
+The app creates its local SQLite database automatically. The trained model is included. For live packet monitoring on Windows, install **Npcap** with **WinPcap API-compatible Mode** and run the app with the permissions required to capture traffic (typically from an elevated terminal). On the Live Monitor page, select the network adapter that is actually carrying the traffic (for example, Wi-Fi rather than disconnected Ethernet). If capture stops, the monitor displays the capture error; check that Npcap is running and that the app has capture permissions. The CIC-IDS2017 CSV files are not included; add them to `datasets/` if you want to train the model or use the dataset utility scripts.
 
 ## 🎓 Project Purpose
 

@@ -109,6 +109,43 @@ def get_live_monitor_state(user_id):
     return state
 
 
+def get_capture_interfaces():
+    """Return the interfaces Scapy can use for packet capture."""
+    if not SCAPY_AVAILABLE or get_if_list is None or conf is None:
+        return []
+
+    available = set(get_if_list())
+    interfaces = []
+
+    for interface in conf.ifaces.values():
+        name = getattr(interface, "name", None)
+        network_name = getattr(interface, "network_name", None)
+        capture_name = (
+            network_name if network_name in available
+            else name if name in available
+            else None
+        )
+
+        if capture_name is None:
+            continue
+
+        description = getattr(interface, "description", "")
+        address = getattr(interface, "ip", "")
+        label = name or description or capture_name
+
+        if description and description != label:
+            label += f" — {description}"
+        if address:
+            label += f" ({address})"
+
+        interfaces.append({
+            "value": capture_name,
+            "label": label
+        })
+
+    return interfaces
+
+
 def get_default_capture_interface():
     """Return the Scapy default interface name."""
     if not SCAPY_AVAILABLE or conf is None:
@@ -118,10 +155,35 @@ def get_default_capture_interface():
     if configured_interface:
         return configured_interface
 
-    try:
-        return str(getattr(conf.iface, "name", conf.iface))
-    except Exception:
-        return "Default interface"
+    default_interface = conf.iface
+    available = {
+        interface["value"]
+        for interface in get_capture_interfaces()
+    }
+
+    for capture_name in (
+        getattr(default_interface, "network_name", None),
+        getattr(default_interface, "name", None)
+    ):
+        if capture_name in available:
+            return capture_name
+
+    return "Default interface"
+
+
+def get_capture_backend_error():
+    """Return a clear error when Windows packet capture is unavailable."""
+    if (
+        SCAPY_AVAILABLE
+        and os.name == "nt"
+        and getattr(conf.L2listen, "__name__", None) == "_NotAvailableSocket"
+    ):
+        return (
+            "Npcap is missing or unavailable (Scapy cannot load wpcap.dll). "
+            "Install Npcap with WinPcap API-compatible Mode, then restart the app."
+        )
+
+    return None
 
 
 def get_live_flow_store(user_id):
@@ -665,6 +727,33 @@ def packet_capture_worker(user_id, interface):
         state["running"] = False
         state["message"] = f"Packet capture could not start: {error}"
         app.logger.exception("Live Monitor capture failed to start")
+
+
+def refresh_capture_status(user_id):
+    """Reflect capture-thread failures in the monitor state."""
+    state = get_live_monitor_state(user_id)
+    sniffer = LIVE_MONITOR_RUNTIME.get(user_id)
+
+    if not state["running"] or sniffer is None:
+        return
+
+    thread = getattr(sniffer, "thread", None)
+    if getattr(sniffer, "running", False) or (
+        thread is not None and thread.is_alive()
+    ):
+        return
+
+    error = getattr(sniffer, "exception", None)
+    state["running"] = False
+    state["message"] = (
+        f"Packet capture stopped unexpectedly: {error}"
+        if error
+        else "Packet capture stopped unexpectedly. Check the selected interface and capture permissions."
+    )
+    LIVE_MONITOR_RUNTIME.pop(user_id, None)
+
+    if error:
+        app.logger.error("Live Monitor capture thread stopped: %s", error)
 
 
 def stop_packet_capture(user_id):
@@ -1720,11 +1809,19 @@ def resolve_alert(alert_id):
 @login_required
 def monitor():
     state = get_live_monitor_state(current_user.id)
+    interfaces = get_capture_interfaces()
+    default_interface = get_default_capture_interface()
+    capture_backend_error = get_capture_backend_error()
+    if capture_backend_error and not state["running"]:
+        state["message"] = capture_backend_error
 
     return render_template(
         "monitor.html",
         monitor=state,
-        scapy_available=SCAPY_AVAILABLE
+        scapy_available=SCAPY_AVAILABLE,
+        interfaces=interfaces,
+        default_interface=default_interface,
+        capture_backend_error=capture_backend_error
     )
 
 
@@ -1747,7 +1844,58 @@ def start_monitor():
             "monitor": state
         }), 500
 
-    interface = get_default_capture_interface()
+    capture_backend_error = get_capture_backend_error()
+    if capture_backend_error:
+        state["running"] = False
+        state["message"] = capture_backend_error
+        return jsonify({
+            "success": False,
+            "message": capture_backend_error,
+            "monitor": state
+        }), 503
+
+    payload = request.get_json(silent=True)
+    if payload is None:
+        payload = {}
+
+    if not isinstance(payload, dict):
+        return jsonify({
+            "success": False,
+            "message": "Invalid monitor start request.",
+            "monitor": state
+        }), 400
+
+    requested_interface = payload.get("interface")
+    if requested_interface is not None and not isinstance(requested_interface, str):
+        return jsonify({
+            "success": False,
+            "message": "The selected network interface must be a string.",
+            "monitor": state
+        }), 400
+
+    interface = (
+        requested_interface or get_default_capture_interface()
+    ).strip()
+    interfaces = get_capture_interfaces()
+
+    if not interfaces:
+        return jsonify({
+            "success": False,
+            "message": "Scapy found no capture interfaces. Check that Npcap is installed and running.",
+            "monitor": state
+        }), 503
+
+    interface_values = {
+        available_interface["value"]
+        for available_interface in interfaces
+    }
+
+    if interface not in interface_values:
+        return jsonify({
+            "success": False,
+            "message": "The selected network interface is not available. Refresh the page and choose an available interface.",
+            "monitor": state
+        }), 400
 
     state["running"] = True
     state["started_at"] = datetime.now(timezone.utc).isoformat()
@@ -1814,6 +1962,7 @@ def stop_monitor():
 @app.route("/api/monitor/status")
 @login_required
 def monitor_status():
+    refresh_capture_status(current_user.id)
     state = get_live_monitor_state(current_user.id)
 
     return jsonify({
