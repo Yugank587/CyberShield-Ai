@@ -1,19 +1,18 @@
+import json
+import os
+import sys
 from pathlib import Path
 
 import joblib
 import numpy as np
 import pandas as pd
+import sklearn
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import (
-    accuracy_score,
-    classification_report,
-    confusion_matrix
-)
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
+from ml.evaluation import evaluate_predictions
 
 # --------------------------------------------------
 # PROJECT CONFIGURATION
@@ -25,6 +24,11 @@ MODEL_DIR = PROJECT_DIR / "models"
 
 MODEL_PATH = MODEL_DIR / "cybershield_model.joblib"
 TEMP_MODEL_PATH = MODEL_DIR / "cybershield_model.joblib.tmp"
+EVALUATION_PATH = MODEL_DIR / "model_evaluation.json"
+HOLDOUT_FILE = os.getenv(
+    "CYBERSHIELD_HOLDOUT_FILE",
+    "Tuesday-WorkingHours.pcap_ISCX.csv"
+)
 
 CHUNK_SIZE = 100_000
 
@@ -77,7 +81,7 @@ def normalize_label(value):
 # DATA COLLECTION AND SAMPLING
 # --------------------------------------------------
 
-def collect_training_data():
+def collect_training_data(holdout_file=HOLDOUT_FILE):
 
     csv_files = sorted(DATASET_DIR.glob("*.csv"))
 
@@ -86,13 +90,25 @@ def collect_training_data():
             "No CSV files found in the datasets folder."
         )
 
-    samples = {}
+    training_samples = {}
+    holdout_samples = {}
     total_rows = 0
 
     print("\nReading CIC-IDS2017 dataset...")
     print("Dataset folder:", DATASET_DIR)
 
+    if not any(path.name == holdout_file for path in csv_files):
+        raise FileNotFoundError(
+            f"Holdout CSV '{holdout_file}' was not found. "
+            "Set CYBERSHIELD_HOLDOUT_FILE to an available dataset file."
+        )
+
     for file_path in csv_files:
+        samples = (
+            holdout_samples
+            if file_path.name == holdout_file
+            else training_samples
+        )
 
         print("\nProcessing:", file_path.name)
 
@@ -207,125 +223,68 @@ def collect_training_data():
 
         print("Completed:", file_path.name)
 
-    if not samples:
+    if not training_samples or not holdout_samples:
         raise ValueError(
-            "No usable training records were found."
+            "Training and holdout files must both contain usable records."
         )
 
-    # Combine all sampled categories.
-    data = pd.concat(
-        list(samples.values()),
-        ignore_index=True
-    )
+    def finalize_samples(samples, description):
+        data = pd.concat(list(samples.values()), ignore_index=True)
+        data = data.drop_duplicates().sample(
+            frac=1,
+            random_state=RANDOM_STATE
+        ).reset_index(drop=True)
 
-    # Remove duplicate feature and target records.
-    data = data.drop_duplicates()
+        if description == "training":
+            class_counts = data["Target"].value_counts()
+            rare_classes = class_counts[class_counts < 2].index.tolist()
 
-    # Shuffle the final dataset.
-    data = data.sample(
-        frac=1,
-        random_state=RANDOM_STATE
-    ).reset_index(drop=True)
+            if rare_classes:
+                print("\nClasses excluded due to insufficient training samples:")
+                for label in rare_classes:
+                    print("-", label)
+                data = data[~data["Target"].isin(rare_classes)].copy()
 
-    # Remove classes with fewer than two samples.
-    class_counts = data["Target"].value_counts()
+        return data
 
-    rare_classes = class_counts[
-        class_counts < 2
-    ].index.tolist()
+    training_data = finalize_samples(training_samples, "training")
+    holdout_data = finalize_samples(holdout_samples, "holdout")
 
-    if rare_classes:
-
-        print("\nClasses excluded due to insufficient samples:")
-
-        for label in rare_classes:
-            print("-", label)
-
-        data = data[
-            ~data["Target"].isin(rare_classes)
-        ].copy()
-
-    if data.empty:
+    if training_data.empty or holdout_data.empty:
         raise ValueError(
-            "No classes have enough records for model training."
+            "The selected files did not produce usable training and holdout records."
         )
 
     print("\n" + "=" * 65)
-    print("MULTICLASS DATASET SUMMARY")
+    print("LEAKAGE-RESISTANT DATASET SUMMARY")
     print("=" * 65)
 
     print("Total rows scanned:", f"{total_rows:,}")
-    print("Sampled records:", f"{len(data):,}")
+    print("Training records:", f"{len(training_data):,}")
+    print("Held-out records:", f"{len(holdout_data):,}")
+    print("Held-out file:", holdout_file)
 
-    print("\nRecords per attack category:")
+    print("\nTraining records per attack category:")
 
     print(
-        data["Target"]
+        training_data["Target"]
         .value_counts()
         .to_string()
     )
 
-    return data
+    print("\nHeld-out records per attack category:")
+    print(holdout_data["Target"].value_counts().to_string())
+
+    return training_data, holdout_data
 
 
 # --------------------------------------------------
 # MODEL TRAINING
 # --------------------------------------------------
 
-def train_model():
-
-    MODEL_DIR.mkdir(
-        parents=True,
-        exist_ok=True
-    )
-
-    data = collect_training_data()
-
-    X = data.drop(
-        columns=["Target"]
-    )
-
-    y = data["Target"].astype(str)
-
-    # Remove features containing only missing values.
-    X = X.dropna(
-        axis=1,
-        how="all"
-    )
-
-    feature_columns = X.columns.tolist()
-
-    class_counts = y.value_counts()
-
-    if len(class_counts) < 2:
-        raise ValueError(
-            "Multiclass training requires at least two categories."
-        )
-
-    if (class_counts < 2).any():
-        raise ValueError(
-            "Every training category must contain at least two records."
-        )
-
-    print("\nNumber of model features:", len(feature_columns))
-    print("Number of classes:", y.nunique())
-
-    # Split the dataset while preserving category distribution.
-    X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
-        test_size=0.20,
-        random_state=RANDOM_STATE,
-        stratify=y
-    )
-
-    print("\nTraining multiclass Random Forest classifier...")
-
-    model = Pipeline([
-        (
-            "imputer",
-            SimpleImputer(strategy="median")
-        ),
+def build_model():
+    return Pipeline([
+        ("imputer", SimpleImputer(strategy="median")),
         (
             "classifier",
             RandomForestClassifier(
@@ -340,89 +299,181 @@ def train_model():
         )
     ])
 
-    model.fit(
+
+def train_model(holdout_file=HOLDOUT_FILE):
+    MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
+    training_data, holdout_data = collect_training_data(holdout_file)
+    X_train = training_data.drop(columns=["Target"])
+    y_train = training_data["Target"].astype(str)
+
+    X_train = X_train.dropna(axis=1, how="all")
+    feature_columns = X_train.columns.tolist()
+
+    if y_train.nunique() < 2 or (y_train.value_counts() < 2).any():
+        raise ValueError(
+            "Training requires at least two classes with two records each."
+        )
+
+    X_holdout = holdout_data.reindex(columns=feature_columns).copy()
+    y_holdout = holdout_data["Target"].astype(str)
+
+    training_hashes = pd.util.hash_pandas_object(
         X_train,
-        y_train
+        index=False
+    ).to_numpy()
+    holdout_hashes = pd.util.hash_pandas_object(
+        X_holdout,
+        index=False
+    ).to_numpy()
+    duplicate_holdout_rows = np.isin(
+        holdout_hashes,
+        training_hashes
+    )
+    removed_duplicates = int(duplicate_holdout_rows.sum())
+    X_holdout = X_holdout.loc[~duplicate_holdout_rows]
+    y_holdout = y_holdout.loc[~duplicate_holdout_rows]
+
+    if X_holdout.empty:
+        raise ValueError(
+            "All holdout records duplicate training features; "
+            "choose a different CYBERSHIELD_HOLDOUT_FILE."
+        )
+
+    print("\nNumber of model features:", len(feature_columns))
+    print("Training classes:", y_train.nunique())
+    print("Training records:", f"{len(X_train):,}")
+    print("Held-out records:", f"{len(X_holdout):,}")
+    print("Duplicate holdout records removed:", f"{removed_duplicates:,}")
+
+    print("\nFitting grouped-holdout evaluation model...")
+    evaluation_model = build_model()
+    evaluation_model.fit(X_train, y_train)
+
+    predictions = evaluation_model.predict(X_holdout)
+    evaluation = evaluate_predictions(
+        y_holdout.tolist(),
+        predictions.tolist(),
+        set(evaluation_model.classes_) | set(y_holdout.unique())
+    )
+    unseen_holdout_labels = sorted(
+        set(y_holdout.unique()) - set(evaluation_model.classes_)
     )
 
-    # --------------------------------------------------
-    # MODEL EVALUATION
-    # --------------------------------------------------
+    production_data = pd.concat(
+        [training_data, holdout_data],
+        ignore_index=True
+    ).drop_duplicates().reset_index(drop=True)
+    X_production = production_data.reindex(columns=feature_columns).copy()
+    y_production = production_data["Target"].astype(str)
 
-    print("\nEvaluating multiclass model...")
+    print("\nFitting final model on all available labeled source files...")
+    model = build_model()
+    model.fit(X_production, y_production)
 
-    predictions = model.predict(X_test)
-
-    accuracy = accuracy_score(
-        y_test,
-        predictions
-    )
-
-    print(
-        "\nOverall accuracy:",
-        round(accuracy * 100, 2),
-        "%"
-    )
-
-    print("\nClassification Report:")
-
-    print(
-        classification_report(
-            y_test,
-            predictions,
-            labels=model.classes_,
-            zero_division=0
+    detection_limitation_note = (
+        "These labels were absent from the evaluation model's training "
+        "split and could not be predicted in this holdout: "
+        + ", ".join(unseen_holdout_labels)
+        + ". The final model is retrained on all source files, including "
+        "these labels, but this evaluation does not validate its "
+        "generalization to them."
+        if unseen_holdout_labels
+        else (
+            "All holdout labels were represented in the evaluation "
+            "training split. The final model is retrained on all source "
+            "files; this same-corpus result is not external validation."
         )
     )
 
-    print("\nConfusion Matrix:")
-
-    print(
-        confusion_matrix(
-            y_test,
-            predictions,
-            labels=model.classes_
-        )
+    training_files = sorted(
+        path.name
+        for path in DATASET_DIR.glob("*.csv")
+        if path.name != holdout_file
     )
+    model_report = {
+        "model_type": "multiclass",
+        "python_version": sys.version.split()[0],
+        "sklearn_version": sklearn.__version__,
+        "evaluation_method": (
+            "The evaluation model was fit on every source CSV except the "
+            "complete holdout file. Exact feature duplicates of evaluation "
+            "training rows were removed before scoring. After evaluation, "
+            "the final saved model was retrained on all available source "
+            "files, including the holdout; the metrics describe the "
+            "evaluation model, not an external validation set."
+        ),
+        "holdout_file": holdout_file,
+        "training_files": training_files,
+        "training_records": int(len(X_train)),
+        "holdout_records": int(len(X_holdout)),
+        "final_model_training_files": sorted(
+            path.name for path in DATASET_DIR.glob("*.csv")
+        ),
+        "final_model_training_records": int(len(X_production)),
+        "model_classes": [str(label) for label in model.classes_],
+        "duplicate_holdout_records_removed": removed_duplicates,
+        "random_state": RANDOM_STATE,
+        "pipeline": {
+            "imputer": "median",
+            "classifier": {
+                "name": "RandomForestClassifier",
+                "n_estimators": 150,
+                "max_depth": 25,
+                "min_samples_split": 4,
+                "min_samples_leaf": 2,
+                "class_weight": "balanced"
+            }
+        },
+        "sampling_limits": {
+            "benign_training_records": BENIGN_LIMIT,
+            "attack_training_records_per_class": ATTACK_LIMIT_PER_CATEGORY
+        },
+        "sampling_note": (
+            "The same per-class caps are applied independently to training "
+            "and holdout data. Weighted metrics reflect this sampled class "
+            "distribution, not natural network prevalence."
+        ),
+        "unseen_holdout_labels": unseen_holdout_labels,
+        "detection_limitation_note": detection_limitation_note,
+        "probability_note": (
+            "Random Forest predict_proba scores are uncalibrated and must "
+            "not be interpreted as calibrated incident probabilities."
+        ),
+        "macro_f1_note": (
+            "Macro F1 averages only labels with support in the holdout; "
+            "per-class entries still include zero-support labels."
+        ),
+        "metrics": evaluation
+    }
 
-    # --------------------------------------------------
-    # SAVE MULTICLASS MODEL
-    # --------------------------------------------------
+    print("\nHeld-out evaluation:")
+    print(json.dumps(model_report, indent=2))
 
     model_data = {
         "model": model,
         "feature_columns": feature_columns,
-
         "target_mapping": {
             str(label): str(label)
             for label in model.classes_
         },
-
         "model_type": "multiclass",
-        "model_classes": [
-            str(label) for label in model.classes_
-        ]
+        "model_classes": [str(label) for label in model.classes_],
+        "evaluation": model_report
     }
 
-    print("\nSaving trained model...")
+    evaluation_temp_path = EVALUATION_PATH.with_suffix(".json.tmp")
+    with evaluation_temp_path.open("w", encoding="utf-8") as report_file:
+        json.dump(model_report, report_file, indent=2)
+        report_file.write("\n")
 
-    joblib.dump(
-        model_data,
-        TEMP_MODEL_PATH
-    )
-
-    # Replace the previous model only after successful saving.
+    joblib.dump(model_data, TEMP_MODEL_PATH)
     TEMP_MODEL_PATH.replace(MODEL_PATH)
+    evaluation_temp_path.replace(EVALUATION_PATH)
 
-    print("\n" + "=" * 65)
-    print("CYBERSHIELD AI MULTICLASS TRAINING COMPLETED")
-    print("=" * 65)
-
-    print("Model saved successfully:")
-    print(MODEL_PATH)
-
-    print("\nSupported attack categories:")
-
+    print("\nModel saved:", MODEL_PATH)
+    print("Evaluation report saved:", EVALUATION_PATH)
+    print("Supported attack categories:")
     for label in model.classes_:
         print("-", label)
 

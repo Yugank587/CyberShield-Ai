@@ -1,10 +1,11 @@
 import os
+import secrets
 from pathlib import Path
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
-from functools import wraps
 from collections import defaultdict
 import threading
+from urllib.parse import unquote, urlsplit
 
 import click
 import joblib
@@ -39,6 +40,10 @@ from werkzeug.security import (
 from werkzeug.utils import secure_filename
 
 from extensions import db, login_manager, csrf
+from ml.inference import (
+    analyze_uploaded_csv,
+    load_detection_model
+)
 
 try:
     from scapy.all import AsyncSniffer, conf, get_if_list, IP, IPv6, TCP, UDP
@@ -60,8 +65,35 @@ load_dotenv(BASE_DIR / ".env")
 MODEL_PATH = BASE_DIR / "models" / "cybershield_model.joblib"
 
 UPLOAD_MAX_SIZE = 100 * 1024 * 1024
-ANALYSIS_CHUNK_SIZE = 50_000
-MAX_THREAT_RECORDS = 1000
+APP_ENV = os.getenv("APP_ENV", "development").strip().lower()
+
+
+def resolve_secret_key(environment, configured_key):
+    """Require a persistent production secret; generate one for local use."""
+    placeholder_keys = {
+        "",
+        "replace-with-a-random-secret",
+        "development-only-change-this-key",
+        "change-me",
+        "changeme",
+        "secret"
+    }
+    configured_key = (configured_key or "").strip()
+    is_placeholder = configured_key.casefold() in placeholder_keys
+
+    if environment == "production" and (
+        is_placeholder or len(configured_key) < 32
+    ):
+        raise RuntimeError(
+            "Set a unique SECRET_KEY of at least 32 characters "
+            "before running in production."
+        )
+
+    return (
+        configured_key
+        if not is_placeholder
+        else secrets.token_hex(32)
+    )
 
 # --------------------------------------------------
 # LIVE MONITOR - PHASE 3
@@ -77,6 +109,7 @@ LIVE_FLOW_TIMEOUT_SECONDS = 60
 LIVE_FLOW_PREDICT_PACKET_INTERVAL = 10
 LIVE_FLOW_MAX_EVENTS = 25
 LIVE_FLOW_MAX_ACTIVE = 500
+LIVE_FLOW_MAX_PACKET_SAMPLES = 256
 LIVE_MONITOR_MODEL_CACHE = None
 
 
@@ -186,6 +219,11 @@ def get_capture_backend_error():
     return None
 
 
+def concise_error_message(error, limit=240):
+    message = " ".join(str(error).split())
+    return message if len(message) <= limit else message[:limit - 3] + "..."
+
+
 def get_live_flow_store(user_id):
     """Return the bidirectional flow store for one monitored user."""
     return LIVE_MONITOR_FLOWS.setdefault(user_id, {})
@@ -278,6 +316,12 @@ def _safe_min(values):
     return float(min(values)) if values else 0.0
 
 
+def append_bounded_sample(samples, value):
+    samples.append(value)
+    if len(samples) > LIVE_FLOW_MAX_PACKET_SAMPLES:
+        del samples[:-LIVE_FLOW_MAX_PACKET_SAMPLES]
+
+
 def build_live_flow_features(flow, feature_columns):
     """Build CIC-IDS2017-style flow features from aggregated live packets.
 
@@ -290,7 +334,7 @@ def build_live_flow_features(flow, feature_columns):
     fwd = flow["fwd_lengths"]
     bwd = flow["bwd_lengths"]
     all_lengths = fwd + bwd
-    total_packets = len(all_lengths)
+    total_packets = flow["fwd_packets"] + flow["bwd_packets"]
     total_bytes = flow["fwd_bytes"] + flow["bwd_bytes"]
 
     values = {str(column): 0.0 for column in feature_columns}
@@ -410,6 +454,13 @@ def update_live_flow(user_id, packet):
             flows.pop(stale_key, None)
 
         if key not in flows:
+            if len(flows) >= LIVE_FLOW_MAX_ACTIVE:
+                oldest_key = min(
+                    flows,
+                    key=lambda flow_key: flows[flow_key]["last_seen"]
+                )
+                flows.pop(oldest_key)
+
             flows[key] = _new_flow(
                 now, src, dst, src_port, dst_port, protocol
             )
@@ -422,14 +473,14 @@ def update_live_flow(user_id, packet):
         if (src, src_port, dst, dst_port) == flow["forward_direction"]:
             flow["fwd_packets"] += 1
             flow["fwd_bytes"] += packet_len
-            flow["fwd_lengths"].append(packet_len)
-            flow["fwd_times"].append(now)
+            append_bounded_sample(flow["fwd_lengths"], packet_len)
+            append_bounded_sample(flow["fwd_times"], now)
             direction = "fwd"
         else:
             flow["bwd_packets"] += 1
             flow["bwd_bytes"] += packet_len
-            flow["bwd_lengths"].append(packet_len)
-            flow["bwd_times"].append(now)
+            append_bounded_sample(flow["bwd_lengths"], packet_len)
+            append_bounded_sample(flow["bwd_times"], now)
             direction = "bwd"
 
         flow["last_seen"] = now
@@ -484,7 +535,9 @@ def update_live_flow(user_id, packet):
         with LIVE_MONITOR_LOCK:
             state["flows_analyzed"] += 1
             state["model_features"] = len(feature_columns)
-            state["last_prediction"] = f"{mapped} ({confidence:.1f}% confidence)"
+            state["last_prediction"] = (
+                f"{mapped} ({confidence:.1f}% raw model score; uncalibrated)"
+            )
 
             if mapped.upper() == "BENIGN":
                 state["benign_predictions"] += 1
@@ -512,7 +565,11 @@ def update_live_flow(user_id, packet):
                     "protocol": protocol,
                     "src": src,
                     "dst": dst,
-                    "summary": f"{mapped} detected | {confidence:.1f}% confidence | {src}:{src_port} → {dst}:{dst_port}",
+                    "summary": (
+                        f"{mapped} model prediction | "
+                        f"{confidence:.1f}% raw score | "
+                        f"{src}:{src_port} → {dst}:{dst_port}"
+                    ),
                     "length": int(len(packet)),
                     "threat": True,
                     "attack_type": mapped,
@@ -525,7 +582,10 @@ def update_live_flow(user_id, packet):
                 }
                 state["events"].append(event)
                 state["events"] = state["events"][-LIVE_FLOW_MAX_EVENTS:]
-                state["message"] = f"Threat detected: {mapped} ({confidence:.1f}% confidence)."
+                state["message"] = (
+                    f"Model classified this flow as {mapped} "
+                    f"({confidence:.1f}% raw score; uncalibrated)."
+                )
 
             if should_create_alert:
                 alert_created = create_live_attack_alert(
@@ -552,7 +612,9 @@ def update_live_flow(user_id, packet):
         state = get_live_monitor_state(user_id)
         with LIVE_MONITOR_LOCK:
             state["inference_errors"] += 1
-            state["last_prediction"] = f"Inference error: {error}"
+            state["last_prediction"] = (
+                f"Inference error: {concise_error_message(error)}"
+            )
         app.logger.warning("Live flow prediction skipped: %s", error)
 
 
@@ -574,7 +636,7 @@ def create_live_attack_alert(user_id, attack_type, confidence, flow, packet_leng
         "A live network flow was classified as an attack by the CyberShield AI model.",
         "",
         f"Attack type: {attack_type}",
-        f"Model confidence: {confidence:.2f}%",
+        f"Raw model score (uncalibrated): {confidence:.2f}%",
         f"Source IP: {flow.get('src', 'N/A')}",
         f"Destination IP: {flow.get('dst', 'N/A')}",
         f"Source Port: {flow.get('src_port', 'N/A')}",
@@ -589,7 +651,7 @@ def create_live_attack_alert(user_id, attack_type, confidence, flow, packet_leng
     try:
         with app.app_context():
             alert = Alert(
-                title=f"Live {attack_type} Detected",
+                title=f"Live model prediction: {attack_type}",
                 description=description,
                 severity=severity,
                 status="open",
@@ -601,7 +663,7 @@ def create_live_attack_alert(user_id, attack_type, confidence, flow, packet_leng
             db.session.commit()
 
         app.logger.warning(
-            "LIVE ATTACK ALERT: user=%s type=%s confidence=%.2f source=%s destination=%s",
+            "LIVE MODEL PREDICTION: user=%s type=%s raw_score=%.2f source=%s destination=%s",
             user_id,
             attack_type,
             confidence,
@@ -725,7 +787,10 @@ def packet_capture_worker(user_id, interface):
     except Exception as error:
         LIVE_MONITOR_RUNTIME.pop(user_id, None)
         state["running"] = False
-        state["message"] = f"Packet capture could not start: {error}"
+        state["message"] = (
+            "Packet capture could not start: "
+            f"{concise_error_message(error)}"
+        )
         app.logger.exception("Live Monitor capture failed to start")
 
 
@@ -746,7 +811,8 @@ def refresh_capture_status(user_id):
     error = getattr(sniffer, "exception", None)
     state["running"] = False
     state["message"] = (
-        f"Packet capture stopped unexpectedly: {error}"
+        "Packet capture stopped unexpectedly: "
+        f"{concise_error_message(error)}"
         if error
         else "Packet capture stopped unexpectedly. Check the selected interface and capture permissions."
     )
@@ -761,12 +827,14 @@ def stop_packet_capture(user_id):
     sniffer = LIVE_MONITOR_RUNTIME.pop(user_id, None)
 
     if sniffer is None:
-        return
+        return None
 
     try:
         sniffer.stop()
+        return None
     except Exception as error:
         app.logger.warning("Live Monitor sniffer stop warning: %s", error)
+        return concise_error_message(error)
 
 
 app = Flask(
@@ -778,8 +846,16 @@ app = Flask(
 
 app.config["SECRET_KEY"] = os.getenv(
     "SECRET_KEY",
-    "development-only-change-this-key"
+    ""
 )
+app.config["SECRET_KEY"] = resolve_secret_key(
+    APP_ENV,
+    app.config["SECRET_KEY"]
+)
+app.config["APP_ENV"] = APP_ENV
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = APP_ENV == "production"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
     "DATABASE_URL",
@@ -792,6 +868,21 @@ app.config["MAX_CONTENT_LENGTH"] = UPLOAD_MAX_SIZE
 db.init_app(app)
 login_manager.init_app(app)
 csrf.init_app(app)
+
+
+@app.after_request
+def add_security_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    response.headers.setdefault(
+        "Referrer-Policy",
+        "strict-origin-when-cross-origin"
+    )
+    response.headers.setdefault(
+        "Permissions-Policy",
+        "camera=(), microphone=(), geolocation=()"
+    )
+    return response
 
 
 # --------------------------------------------------
@@ -973,18 +1064,27 @@ def load_user(user_id):
         return None
 
 
-def admin_required(view):
+def is_safe_redirect_target(target):
+    """Accept only same-site absolute paths for post-login redirects."""
+    if (
+        not target
+        or "\\" in target
+        or any(ord(char) < 32 for char in target)
+    ):
+        return False
 
-    @wraps(view)
-    @login_required
-    def wrapped(*args, **kwargs):
+    decoded_target = unquote(target)
+    parsed = urlsplit(decoded_target)
 
-        if not current_user.is_authenticated:
-            return redirect(url_for("login"))
-
-        return view(*args, **kwargs)
-
-    return wrapped
+    return (
+        decoded_target.startswith("/")
+        and not decoded_target.startswith("//")
+        and not parsed.scheme
+        and not parsed.netloc
+        and "\\" not in decoded_target
+        and "%2f" not in decoded_target.casefold()
+        and "%5c" not in decoded_target.casefold()
+    )
 
 
 @app.context_processor
@@ -995,324 +1095,7 @@ def inject_navigation_state():
 
 
 # --------------------------------------------------
-# MACHINE LEARNING HELPERS
-# --------------------------------------------------
-
-def load_detection_model():
-
-    if not MODEL_PATH.is_file():
-        raise FileNotFoundError(
-            "The trained CyberShield AI model was not found. "
-            "Please train the model first."
-        )
-
-    saved_data = joblib.load(MODEL_PATH)
-
-    if (
-        not isinstance(saved_data, dict)
-        or "model" not in saved_data
-        or "feature_columns" not in saved_data
-    ):
-        raise ValueError(
-            "The saved model file has an invalid format."
-        )
-
-    model = saved_data["model"]
-    feature_columns = saved_data["feature_columns"]
-
-    if not hasattr(model, "predict_proba"):
-        raise ValueError(
-            "The saved model does not support prediction probabilities. "
-            "Please train the multiclass model again."
-        )
-
-    return (
-        model,
-        feature_columns,
-        saved_data.get("target_mapping", {})
-    )
-
-
-def safe_value(value):
-
-    if pd.isna(value):
-        return "N/A"
-
-    if isinstance(value, (np.integer,)):
-        return int(value)
-
-    if isinstance(value, (np.floating,)):
-        value = float(value)
-
-    if isinstance(value, float):
-        if not np.isfinite(value):
-            return "N/A"
-
-        if value.is_integer():
-            return int(value)
-
-        return round(value, 4)
-
-    return str(value)
-
-
-def find_column(columns, candidates):
-
-    lookup = {
-        str(column).strip().lower(): column
-        for column in columns
-    }
-
-    for candidate in candidates:
-        if candidate.lower() in lookup:
-            return lookup[candidate.lower()]
-
-    return None
-
-
-def get_flow_details(row):
-
-    columns = list(row.index)
-
-    field_candidates = {
-        "source_ip": [
-            "Source IP", "Src IP", "Source Address"
-        ],
-        "destination_ip": [
-            "Destination IP", "Dst IP", "Destination Address"
-        ],
-        "source_port": [
-            "Source Port", "Src Port"
-        ],
-        "destination_port": [
-            "Destination Port", "Dst Port"
-        ],
-        "protocol": [
-            "Protocol"
-        ],
-        "timestamp": [
-            "Timestamp", "Flow Timestamp"
-        ],
-        "flow_duration": [
-            "Flow Duration"
-        ],
-        "total_fwd_packets": [
-            "Total Fwd Packets"
-        ],
-        "total_bwd_packets": [
-            "Total Backward Packets"
-        ]
-    }
-
-    details = {}
-
-    for field, candidates in field_candidates.items():
-        column = find_column(columns, candidates)
-
-        if column is not None:
-            details[field] = safe_value(row[column])
-        else:
-            details[field] = "N/A"
-
-    return details
-
-
-# --------------------------------------------------
-# MULTICLASS CSV ANALYSIS
-# --------------------------------------------------
-
-def analyze_uploaded_csv(file_stream):
-
-    model, feature_columns, target_mapping = load_detection_model()
-
-    total_records = 0
-    threats_detected = 0
-    benign_records = 0
-    skipped_records = 0
-
-    attack_counts = {}
-    attack_confidence_totals = {}
-    attack_confidence_counts = {}
-    attack_flow_samples = {}
-
-    confidence_total = 0.0
-    confidence_count = 0
-    threat_records = []
-
-    chunks = pd.read_csv(
-        file_stream,
-        chunksize=ANALYSIS_CHUNK_SIZE,
-        low_memory=False,
-        encoding="utf-8",
-        encoding_errors="replace"
-    )
-
-    for chunk in chunks:
-
-        if chunk.empty:
-            continue
-
-        chunk.columns = chunk.columns.astype(str).str.strip()
-
-        if chunk.columns.duplicated().any():
-            raise ValueError(
-                "The uploaded CSV contains duplicate column names."
-            )
-
-        original_rows = chunk.copy()
-
-        label_column = next(
-            (
-                column for column in chunk.columns
-                if column.lower() == "label"
-            ),
-            None
-        )
-
-        if label_column:
-            chunk = chunk.drop(columns=[label_column])
-
-        if "Fwd Header Length.1" in chunk.columns:
-            chunk = chunk.drop(columns=["Fwd Header Length.1"])
-
-        missing_features = [
-            feature for feature in feature_columns
-            if feature not in chunk.columns
-        ]
-
-        if missing_features:
-            raise ValueError(
-                "The uploaded CSV is missing required model features: "
-                + ", ".join(missing_features[:8])
-            )
-
-        features = chunk.reindex(columns=feature_columns).copy()
-
-        for column in feature_columns:
-            features[column] = pd.to_numeric(
-                features[column], errors="coerce"
-            )
-
-        features = features.replace([np.inf, -np.inf], np.nan)
-
-        valid_rows = ~features.isna().all(axis=1)
-        skipped_records += int((~valid_rows).sum())
-
-        valid_features = features.loc[valid_rows]
-
-        if valid_features.empty:
-            continue
-
-        valid_original_rows = original_rows.loc[valid_rows]
-
-        predictions = model.predict(valid_features)
-        probabilities = model.predict_proba(valid_features)
-        confidence_values = probabilities.max(axis=1) * 100
-
-        first_record_number = total_records + 1
-        total_records += len(predictions)
-
-        for index, prediction in enumerate(predictions):
-
-            prediction = str(prediction)
-            mapped_prediction = target_mapping.get(
-                prediction, prediction
-            )
-            confidence = float(confidence_values[index])
-
-            if str(mapped_prediction).upper() == "BENIGN":
-                benign_records += 1
-                continue
-
-            threats_detected += 1
-
-            attack_counts[mapped_prediction] = (
-                attack_counts.get(mapped_prediction, 0) + 1
-            )
-
-            attack_confidence_totals[mapped_prediction] = (
-                attack_confidence_totals.get(mapped_prediction, 0.0)
-                + confidence
-            )
-
-            attack_confidence_counts[mapped_prediction] = (
-                attack_confidence_counts.get(mapped_prediction, 0) + 1
-            )
-
-            confidence_total += confidence
-            confidence_count += 1
-
-            original_row = valid_original_rows.iloc[index]
-            details = get_flow_details(original_row)
-
-            samples = attack_flow_samples.setdefault(
-                mapped_prediction, []
-            )
-
-            if len(samples) < 3:
-                samples.append({
-                    "confidence": round(confidence, 2),
-                    "details": details
-                })
-
-            if len(threat_records) < MAX_THREAT_RECORDS:
-                threat_records.append({
-                    "record_number": first_record_number + index,
-                    "attack_type": mapped_prediction,
-                    "confidence": round(confidence, 2),
-                    "severity": (
-                        "Critical" if confidence >= 95
-                        else "High" if confidence >= 85
-                        else "Medium"
-                    ),
-                    "details": details
-                })
-
-    if total_records == 0:
-        raise ValueError(
-            "The uploaded CSV contains no usable network-flow records."
-        )
-
-    attack_breakdown = []
-
-    for attack_type, count in sorted(
-        attack_counts.items(),
-        key=lambda item: item[1],
-        reverse=True
-    ):
-        category_confidence_count = attack_confidence_counts[attack_type]
-
-        attack_breakdown.append({
-            "attack_type": attack_type,
-            "count": count,
-            "percentage": round(
-                (count / threats_detected) * 100, 2
-            ) if threats_detected else 0,
-            "average_confidence": round(
-                attack_confidence_totals[attack_type]
-                / category_confidence_count, 2
-            ),
-            "flow_samples": attack_flow_samples.get(attack_type, [])
-        })
-
-    average_confidence = (
-        confidence_total / confidence_count
-        if confidence_count else 0
-    )
-
-    return {
-        "total_records": total_records,
-        "threats_detected": threats_detected,
-        "benign_records": benign_records,
-        "skipped_records": skipped_records,
-        "attack_breakdown": attack_breakdown,
-        "threat_records": threat_records,
-        "average_confidence": round(average_confidence, 2),
-        "records_displayed": len(threat_records),
-        "records_limit": MAX_THREAT_RECORDS
-    }
-
-
+# MACHINE-LEARNING INFERENCE LIVES IN ml/inference.py
 # --------------------------------------------------
 # DASHBOARD
 # --------------------------------------------------
@@ -1487,10 +1270,7 @@ def login():
 
             next_url = request.args.get("next", "")
 
-            if (
-                next_url.startswith("/")
-                and not next_url.startswith("//")
-            ):
+            if is_safe_redirect_target(next_url):
                 return redirect(next_url)
 
             return redirect(url_for("home"))
@@ -1633,8 +1413,9 @@ def analysis():
                                     f"{result['total_records']:,}."
                                 ),
                                 (
-                                    f"Average model confidence for this "
-                                    f"attack category: {average_confidence:.2f}%."
+                                    f"Average raw model score for this "
+                                    f"attack category (uncalibrated): "
+                                    f"{average_confidence:.2f}%."
                                 ),
                                 "",
                                 "REPRESENTATIVE FLOW DETAILS (up to 3 samples):"
@@ -1656,7 +1437,7 @@ def analysis():
                                     "",
                                     (
                                         f"Sample {sample_number} "
-                                        f"(model confidence: "
+                                        f"(raw model score, uncalibrated: "
                                         f"{sample.get('confidence', 0):.2f}%):"
                                     ),
                                     f"Source IP: {details.get('source_ip', 'N/A')}",
@@ -1944,12 +1725,14 @@ def stop_monitor():
             "monitor": state
         })
 
-    stop_packet_capture(current_user.id)
+    stop_error = stop_packet_capture(current_user.id)
     LIVE_MONITOR_FLOWS.pop(current_user.id, None)
 
     state["running"] = False
     state["message"] = (
-        "Live Monitor stopped. Packet capture has been stopped safely."
+        f"Live Monitor stopped with a capture warning: {stop_error}"
+        if stop_error
+        else "Live Monitor stopped. Packet capture has been stopped safely."
     )
 
     return jsonify({
@@ -2016,7 +1799,6 @@ def health():
     return jsonify({
         "status": "ok",
         "app": "CyberShield AI",
-        "project_folder": str(BASE_DIR),
         "css_file_exists": css_file.is_file(),
         "model_exists": model_ready,
         "model_type": model_type,
